@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block headblock %}
+<link href="static/css/dan.css", rel="stylesheet" />
+<!--<script src="static/js/dan.js" charset="utf-8"></script>-->
+{% block headblock_index %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar">
+        <li>
+          <a><p style="color: black; font-size: 20px">Dan Web</p></a>
+          </li>
+        <li><a class="side_item" name="file_manage" href={{ url_for("index") }}>文件管理</a></li>
+      </ul>
+      <ul class="nav nav-sidebar">
+        {% for job_name in job_names %}
+        <li><a class="side_item job_item" name="{{ job_name }}">{{ job_name }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+      <h1 class="big-page-header page-header">{{ title }}</h1>
+      {% block main %}
+      {% endblock %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block inlinescript %}
+<script>
+$("document").ready(function() {
+$('a.side_item[name="{{ now_active_tab }}"]').parent().addClass("active");
+})
+</script>
+{% endblock %}

@@ -92,16 +92,23 @@ def init_db(app):
             return check_password_hash(self.password, password)
 
         def delete_user_dir(self):
-            relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
-            user_dir_path = os.path.join(approot, relative_dir_path)
+            user_dir_path = self.get_user_dir()
             shutil.rmtree(user_dir_path, ignore_errors=True)
 
-        def make_user_dir(self):
+        def get_user_dir(self, dir_name="."):
             relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
             user_dir_path = os.path.join(approot, relative_dir_path)
+            return os.path.join(user_dir_path, dir_name)
+
+        def delete_user_file(self, dir_name, file_name):
+            # fixme: 是否需要更严格的检查, 外面已经检查过了, 但是这里是不是最好也检查一遍
+            os.remove(os.path.join(self.get_user_dir(), dir_name, file_name))
+
+        def make_user_dir(self):
+            user_dir_path = self.get_user_dir()
             shutil.rmtree(user_dir_path, ignore_errors=True)
             # fixme: 怎么把它们弄成一个配置文件, 只能装到working set吗
-            os.mkdir(relative_dir_path)
+            os.mkdir(user_dir_path)
             import pdb
             pdb.set_trace()
             with chdir(user_dir_path):
@@ -111,6 +118,14 @@ def init_db(app):
                         os.mkdir(_dir)
                     except Exception as e:
                         print e
+
+        def get_file_name_list(self, dir_name):
+            relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
+            dir_path = os.path.join(approot, relative_dir_path, dir_name)
+            if not os.path.isdir(dir_path):
+                return []
+            else:
+                return os.listdir(dir_path)
 
 
     class Job(db.Model):
