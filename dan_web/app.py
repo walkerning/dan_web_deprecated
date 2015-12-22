@@ -7,16 +7,18 @@ import os
 import flask as _f
 from flask.ext import login as _l
 
-from control import upload as _u
-from helper import success_json, fail_json
-from model import init_db
+from dan_web.control import upload as _u
+from dan_web.helper import success_json, fail_json
+from dan_web.model import init_db
 from werkzeug import secure_filename
+from flask_sockets import Sockets
 
 here = os.path.dirname(os.path.abspath(__file__))
 
 # init app
 app = _f.Flask(__name__)
 app.config.from_pyfile(os.path.join(here, 'app_conf.py'))
+app.debug = True #just for debug
 
 # init database
 init_db(app)
@@ -30,6 +32,20 @@ login_manager.login_view = '/login'
 login_manager.login_message = u'请先登录'
 login_manager.refresh_view = u'请重新登录'
 
+
+# here import job control !
+from dan_web.control.job import job_blueprint
+app.register_blueprint(job_blueprint, url_prefix="/job/")
+
+# websocket, need wsgi middleware to correctly handle the websocket environ
+sockets = Sockets(app)
+@sockets.route('/job/realtime_log')
+def realtime_log(ws):
+    while True:
+        message = ws.receive()
+        ws.send(message)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
@@ -42,9 +58,9 @@ def index():
     """
     Dan website index page."""
 
-    if _l.current_user.is_authenticated:
-        return _f.render_template('index_file.html', now_active_tab="file_manage",
-                                  job_names = ['Job1111'], title=u"文件管理")
+    job_list = [(x.job_name, x.job_id) for x in Job.get_job_list_by_user_id(_l.current_user.user_id)]
+    return _f.render_template('index_file.html', now_active_tab="file_manage",
+                              job_list=job_list, title=u"文件管理")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -83,7 +99,7 @@ def upload():
         upload_filename = _u.get_upload_filename(_l.current_user.user_id,
                                               upload_file.filename,
                                               upload_file_type)
-        upload_file.save(os.path.join(app.config['UPLOAD_DIR'], upload_filename))
+        upload_file.save(os.path.join(here, app.config['UPLOAD_DIR'], upload_filename))
 
         return success_json(filename=upload_filename)
 
@@ -101,12 +117,10 @@ def refresh_file_list():
 @app.route("/download_file/<file_name>", methods=['GET'])
 @_l.login_required
 def download_file(file_name):
-    #dir_name = secure_filename(_f.request.args.get('dir_name', ''))
     file_name = secure_filename(file_name) # never trust user input
-    dir_name = None
-    print file_name, dir_name
+    dir_name = secure_filename(_f.request.args.get('dir_name', ''))
+
     if not dir_name or not file_name:
-        # 过会在看这里
         return _f.abort(404)
     else:
         return _f.send_from_directory(_l.current_user.get_user_dir(dir_name),

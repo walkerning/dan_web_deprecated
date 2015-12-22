@@ -91,3 +91,13 @@
 .table_file_list {
     table-layout: fixed;
 }
+
+
+
+/* for flash */
+.alert {
+    width: 50%;
+    margin: 0 auto -50px;
+    position: relative;
+    z-index: 1;
+}

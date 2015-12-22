@@ -16,9 +16,12 @@
         <li><a class="side_item" name="file_manage" href={{ url_for("index") }}>文件管理</a></li>
       </ul>
       <ul class="nav nav-sidebar">
-        {% for job_name in job_names %}
-        <li><a class="side_item job_item" name="{{ job_name }}">{{ job_name }}</a></li>
+        {% for job in job_list %}
+        <li><a class="side_item job_item" name="{{ job[0] }}" href="/view/{{ job[1] }}">{{ job[0] }}</a></li>
         {% endfor %}
+      </ul>
+      <ul class="nav nav-sidebar">
+        <li><a class="side_item" href="/logout">登出</a><li>
       </ul>
     </div>
 

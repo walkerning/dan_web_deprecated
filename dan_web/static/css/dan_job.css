@@ -1,0 +1,7 @@
+.log_terminal {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 11px;
+    color: rgb(240, 240, 240);
+    background-color: rgb(50, 50, 100);
+    outline: none;
+}

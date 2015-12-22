@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+
 import datetime
 import os
 import shutil
+import json
 from werkzeug import generate_password_hash, check_password_hash
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
-from helper import chdir
+from dan_web.helper import chdir, get_adapter
 
 approot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -45,7 +47,7 @@ def init_db(app):
                 return None
             else:
                 # 新建文件夹
-                new_user.make_user_dir()
+                new_user.make_dirs()
                 return new_user
 
         @classmethod
@@ -95,6 +97,16 @@ def init_db(app):
             user_dir_path = self.get_user_dir()
             shutil.rmtree(user_dir_path, ignore_errors=True)
 
+        def get_user_log_dir(self):
+            relative_dir_path = os.path.join(app.config['USER_LOG_DIR'], str(self.user_id))
+            user_log_dir_path = os.path.join(approot, relative_dir_path)
+            return user_log_dir_path
+
+        def get_user_conf_dir(self):
+            relative_dir_path = os.path.join(app.config['USER_CONF_DIR'], str(self.user_id))
+            user_conf_dir_path = os.path.join(approot, relative_dir_path)
+            return user_conf_dir_path
+
         def get_user_dir(self, dir_name="."):
             relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
             user_dir_path = os.path.join(approot, relative_dir_path)
@@ -104,11 +116,17 @@ def init_db(app):
             # fixme: 是否需要更严格的检查, 外面已经检查过了, 但是这里是不是最好也检查一遍
             os.remove(os.path.join(self.get_user_dir(), dir_name, file_name))
 
-        def make_user_dir(self):
+        def make_dirs(self):
             user_dir_path = self.get_user_dir()
-            shutil.rmtree(user_dir_path, ignore_errors=True)
+            user_conf_dir_path = self.get_user_conf_dir()
+            user_log_dir_path = self.get_user_log_dir()
+
+            # shutil.rmtree(user_dir_path, ignore_errors=True)
             # fixme: 怎么把它们弄成一个配置文件, 只能装到working set吗
             os.mkdir(user_dir_path)
+            os.mkdir(user_conf_dir_path)
+            os.mkdir(user_log_dir_path)
+            # for test
             import pdb
             pdb.set_trace()
             with chdir(user_dir_path):
@@ -136,13 +154,85 @@ def init_db(app):
         job_name = db.Column(db.String(30), nullable=False)
         job_type = db.Column(db.String(20), nullable=False)
         job_conf = db.Column(db.String(50), nullable=False)
-        job_status = db.Column(db.String(10), nullable=False)
+        job_status = db.Column(db.String(10), nullable=False) # starting, running, failed, success
         log_file = db.Column(db.String(50), nullable=False)
         log_deleted = db.Column(db.BOOLEAN, db.ColumnDefault(False))
+        active = db.Column(db.BOOLEAN, db.ColumnDefault(True))
         create_time = db.Column(db.DATETIME, db.ColumnDefault(datetime.datetime.utcnow()))
         end_time = db.Column(db.DATETIME)
         running_pid = db.Column(db.Integer)
         user_id = db.Column('user_id', db.Integer, db.ForeignKey('user.user_id'))
+
+        def __init__(self, user_id, job_name, job_type):
+            self.uesr_id = user_id
+            self.job_name = job_name
+            self.job_type = job_type
+            self.job_status = "starting"
+
+        @classmethod
+        def create_job(cls, user_id, conf):
+            """
+            conf: 包含所有配置的dict, 先要检查配置是否完全"""
+            if not "job_name" in conf or not "job_type" in conf:
+                # 必要的配置没有提供
+                return None
+            adapter =  get_adapter(conf["job_type"])
+            if adapter is None:
+                # 无效的job_type
+                return None
+            if not adapter.required < conf:
+                # fixme:还没想好optional怎么处理, 先不管
+                # 必要的配置没有提供
+                return None
+            conf_obj = {key:value for key,value in conf.iteritems()
+                        if key in adapter.required.union(adapter.optional)}
+            # fixme: 没给job_conf加随机数, 因为job_id暂时是唯一的
+            ins = cls(user_id, conf["job_name"], conf["job_type"])
+            # 写入conf文件
+            ins.job_conf = str(ins.job_id) + '_conf.json'
+            json.dump(conf_obj, os.path.join(User.get(user_id).get_user_conf_dir(),
+                                             ins.job_conf))
+
+            # 生成log file 暂时也没有给log file加随机数
+            # fixme: 先使用一个独立的文件夹了, 如果要用tmpdir以后再说
+            ins.log_file = str(ins.job_id) + '.log'
+            return ins
+
+        def get_id(self):
+            """
+            for sqlachelmy"""
+            return unicode(self.job_id)
+
+        def get_conf(self):
+            # 读配置文件并返回配置dict
+            user_conf_dir = User.get(self.user_id).get_user_conf_dir()
+            conf_file_path = os.path.join(user_conf_dir, self.job_conf)
+            # fixme: 错误处理是在这里做还是在外面catch这里要统一. 感觉在这里做比较较好. 那这样的话如果失败需要一个error_string.
+            conf = json.load(conf_file_path)
+            return conf
+
+        @classmethod
+        def get_job_list_by_user_id(cls, user_id):
+            return cls.query.filter_by(user_id=user_id, active=True)
+
+        @classmethod
+        def get(cls, job_id):
+            return cls.query.filter_by(job_id=int(job_id), active=True).first()
+
+        @classmethod
+        def get_job_of_user_id(cls, job_id, user_id):
+            job = cls.get(job_id)
+            if job.user_id == user_id:
+                return job
+            else:
+                # this job is not of this user
+                return None
+
+        @classmethod
+        def delete_by_job_id(cls, job_id):
+            cls.get(job_id).delete()
+            db.session.commit()
+
 
     globals().update({
         'db': db,

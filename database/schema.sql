@@ -20,6 +20,7 @@ CREATE TABLE JOB(
      job_status VARCHAR(10) NOT NULL,
      log_file VARCHAR(50) NOT NULL,
      log_deleted BOOLEAN DEFAULT 0,
+     active BOOLEAN DEFAULT 1,
      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
      end_time DATETIME,
      running_pid INT,

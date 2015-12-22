@@ -3,3 +3,6 @@ uploads/
 try*
 app_conf.py
 design.md
+
+*_confs/
+*_logs/

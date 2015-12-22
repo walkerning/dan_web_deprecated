@@ -1,0 +1,61 @@
+{% extends "index_layout.html" %}
+{% block headblock_index %}
+<script src="static/js/job_view.js" charset="utf-8"></script>
+{% endblock %}
+
+
+{% block main %}
+<h2 class="page-header">Job Operation</h2>
+<div class="row" style="margin-bottom: 30px">
+  <div class="col-lg-7">
+    <table class="table table-striped job_conf">
+      <thead>
+        <tr>
+          <th>Firstname</th>
+          <th>Lastname</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, value in job_conf.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col-lg-1">
+  </div>
+
+  <div class="col-lg-3">
+    <!-- job operation -->
+    <div class="list-group">
+      <button type="button" class="btn btn-warning list-group-item">中止该Job</button>
+      <button type="button" class="btn btn-danger list-group-item">删除该Job</button>
+    </div>
+  </div>
+</div>
+
+<h2 class="page-header">Job Status</h2>
+
+<div class="row">
+  <div class="col-lg-3 col-lg-offset-2">
+    <span class="label label-pill label-warning job_status">Running</span>
+  </div>
+  <div class="col-lg-3 col-lg-offset-2">
+    <button type="button" class="btn btn-info" id="show_job_log">查看Job Log</button>
+  </div>
+</div>
+<div class="row">
+  <div class="col-lg-6 col-lg-offset-3">
+    <div class="log_terminal">
+      <p> one log</p>
+      <p> another log</p>
+      <p> longlongllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllog </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
