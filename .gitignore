@@ -1,8 +1,10 @@
-# project related
-uploads/
+# project related conf/idea files
 try*
 app_conf.py
 design.md
 
+# project related data files
+uploads/
 *_confs/
 *_logs/
+*.log

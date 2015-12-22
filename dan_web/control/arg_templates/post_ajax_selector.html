@@ -1,0 +1,13 @@
+<!-- pre ajax selector -->
+<div class="col-lg-3">
+  <label for="form_arg_{{ ARG_NAME }}" class="label-control">{{ CONFIG_NAME }}</label>
+</div>
+<div class="col-lg-7 required">
+  <select name="{{ ARG_NAME }}" id="form_arg_{{ ARG_NAME }}" class="form-control post_ajax">
+    <option value=""></option>
+    {% for option in AVAILABLE_OPTIONS %}
+    <option value="{{ option[0] }}">{{ option[1] }}</option>
+    {% endfor %}
+  </select>
+</div>
+</div>

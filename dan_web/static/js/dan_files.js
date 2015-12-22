@@ -35,7 +35,7 @@
       }
     };
     // Open the connection.
-    xhr.open('POST', '/upload/', true);
+    xhr.open('POST', UPLOAD_URL, true);
 
     // reset the upload file progress bar
     clearUploadStatus();
@@ -70,7 +70,7 @@
   /* delete file */
   function delete_file (dir_name, filename) {
     $.ajax({
-      url: '/delete_file',
+      url: DELETE_FILE_URL,
       type: 'POST',
       data: {
         'dir_name': dir_name,
@@ -102,7 +102,7 @@
 
   function refresh_file_list (dir_name) {
     $.ajax({
-      url: '/refresh_file_list',
+      url: REFRESH_FILE_LIST_URL,
       type: 'POST',
       data: {
         'dir_name': dir_name

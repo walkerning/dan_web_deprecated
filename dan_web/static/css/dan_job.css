@@ -5,3 +5,15 @@
     background-color: rgb(50, 50, 100);
     outline: none;
 }
+
+
+.required:after {
+    content: "*";
+    color:red;
+
+}
+
+.form-control {
+    display: inline;
+    width: 90%;
+}

@@ -1,6 +1,6 @@
 {% extends "index_layout.html" %}
 {% block headblock_index %}
-<script src="static/js/dan_files.js" charset="utf-8"></script>
+<script src="/static/js/dan_files.js" charset="utf-8"></script>
 {% endblock %}
 
 
@@ -8,7 +8,7 @@
 <h2 class="page-header">文件上传</h2>
 <div class="row" style="margin-bottom: 30px">
   <div class="col-lg-4" style="margin-left: 30px">
-    <form enctype="multipart/form-data" id="upload_form">
+    <form enctype="multipart/form-data" id="upload_form" class="form-horizontal">
       <div class="form-group">
         <label for="upload_file_type">文件类型</label>
         <select id="upload_file_type" class="form-control" style="width: 50%">

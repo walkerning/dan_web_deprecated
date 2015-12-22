@@ -3,15 +3,19 @@
 Dan web
 """
 
+from __future__ import unicode_literals
 import os
+import logging
+
 import flask as _f
 from flask.ext import login as _l
+from werkzeug import secure_filename
+from flask_sockets import Sockets
 
 from dan_web.control import upload as _u
 from dan_web.helper import success_json, fail_json
 from dan_web.model import init_db
-from werkzeug import secure_filename
-from flask_sockets import Sockets
+# from dan_web.adapter.formview_adapter import FormViewAdapter
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,16 +26,15 @@ app.debug = True #just for debug
 
 # init database
 init_db(app)
-from model import (User, Job)
+from dan_web.model import (User, Job)
 
 # init login manager
 # fixme: move to an independent module
 login_manager = _l.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = '/login'
-login_manager.login_message = u'请先登录'
-login_manager.refresh_view = u'请重新登录'
-
+login_manager.login_message = '请先登录'
+login_manager.refresh_view = '请重新登录'
 
 # here import job control !
 from dan_web.control.job import job_blueprint
@@ -59,8 +62,8 @@ def index():
     Dan website index page."""
 
     job_list = [(x.job_name, x.job_id) for x in Job.get_job_list_by_user_id(_l.current_user.user_id)]
-    return _f.render_template('index_file.html', now_active_tab="file_manage",
-                              job_list=job_list, title=u"文件管理")
+    return _f.render_template('index_file.html', now_active_tab="file-manage",
+                              job_list=job_list, title="文件管理")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -85,14 +88,14 @@ def upload():
     upload_file_type = _f.request.form.get('filetype', None)
 
     if not upload_file:
-        return fail_json(error_string=u'没有上传文件')
+        return fail_json(error_string='没有上传文件')
     elif not upload_file_type:
-        return fail_json(error_string=u'没有提供文件类型')
+        return fail_json(error_string='没有提供文件类型')
     elif not _u.allowed_filetype(upload_file_type):
-        return fail_json(error_string=(u'不支持的文件类型: <%s>' % upload_file_type))
+        return fail_json(error_string=('不支持的文件类型: <%s>' % upload_file_type))
     elif not _u.allowed_file(upload_file_type, upload_file.filename):
-        return fail_json(error_string=(u'不支持的文件名: "%s", '
-                                       u'应为 *.%s') % (
+        return fail_json(error_string=('不支持的文件名: "%s", '
+                                       '应为 *.%s') % (
                                            upload_file.filename,
                                            upload_file_type))
     else:
@@ -109,7 +112,7 @@ def refresh_file_list():
     # secure file name is very important
     dir_name = secure_filename(_f.request.form.get('dir_name', ''))
     if not dir_name:
-        return fail_json(error_string=u'no dir_name specified')
+        return fail_json(error_string='no dir_name specified')
 
     return success_json(file_list=_l.current_user.get_file_name_list(dir_name))
 
@@ -133,12 +136,12 @@ def delete_file():
     file_name = secure_filename(_f.request.form.get('file_name', ''))
     # 可以进一步限制dir_name在那四个里面
     if not dir_name or not file_name:
-        return fail_json(error_string=u'删除请求参数错误')
+        return fail_json(error_string='删除请求参数错误')
     else:
         try:
             _l.current_user.delete_user_file(dir_name, file_name)
         except Exception:
-            return fail_json(error_string=u"删除文件失败")
+            return fail_json(error_string='删除文件失败')
         else:
             return success_json()
 
@@ -150,6 +153,12 @@ def logout():
     return _f.redirect(_f.url_for('login'))
 
 
+@app.before_first_request
+def setup_logging():
+    if not app.debug:
+        # In production mode, add log handler to sys.stderr.
+        app.logger.addHandler(logging.StreamHandler())
+        app.logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
     import sys

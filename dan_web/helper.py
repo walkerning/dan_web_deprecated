@@ -29,8 +29,8 @@ def chdir(path):
         yield
 
 def get_adapter(job_type):
-    adapter = getattr(job_adapter, job_type)
-    if issubclass(job_type, job_adapter.Tool) and not job_adapter.Tool is adapter:
+    adapter = getattr(job_adapter, job_type, None)
+    if adapter and issubclass(adapter, job_adapter.Tool) and not job_adapter.Tool is adapter:
         return adapter
     else:
         return None
