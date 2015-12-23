@@ -8,3 +8,6 @@ uploads/
 *_confs/
 *_logs/
 *.log
+
+# python dist
+build/

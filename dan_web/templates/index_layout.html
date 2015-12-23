@@ -16,9 +16,13 @@
       </ul>
       <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">
+        {% if not job_list %}
+        <li class="disabled"><a class="side_item job_item">还没有Job</a></li>
+        {% else %}
         {% for job in job_list %}
         <li><a class="side_item job_item" id="jobid_{{ job[1] }}" name="{{ job[0] }}" href="{{ url_for( 'job.job_item', job_id=job[1]) }}">{{ job[0] }}</a></li>
         {% endfor %}
+        {% endif %}
       </ul>
       <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">

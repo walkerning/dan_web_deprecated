@@ -14,7 +14,6 @@ approot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def init_db(app):
     db = SQLAlchemy(app)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/dan_test'
     class User(db.Model, UserMixin):
         __tablename__ = 'USER'
 
@@ -108,7 +107,7 @@ def init_db(app):
             user_conf_dir_path = os.path.join(approot, relative_dir_path)
             return user_conf_dir_path
 
-        def get_user_dir(self, dir_name="."):
+        def get_user_dir(self, dir_name=""):
             relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
             user_dir_path = os.path.join(approot, relative_dir_path)
             return os.path.join(user_dir_path, dir_name)
@@ -128,8 +127,6 @@ def init_db(app):
             os.mkdir(user_conf_dir_path)
             os.mkdir(user_log_dir_path)
             # for test
-            import pdb
-            pdb.set_trace()
             with chdir(user_dir_path):
                 for _dir in ['upload_prototxt', 'upload_caffemodel',
                              'generated_prototxt', 'generated_caffemodel']:
@@ -178,8 +175,7 @@ def init_db(app):
                 # 必要的配置没有提供
                 return None
             adapter =  get_adapter([('job_type', conf["job_type"])])
-            import pdb
-            pdb.set_trace()
+
             if adapter is None:
                 # 无效的job_type
                 return None
