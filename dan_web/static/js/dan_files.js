@@ -59,7 +59,7 @@
   }
 
   function displayError (error_string) {
-    $("#status_string").css('color', 'red').text(error_string);
+    $("#status_string").css('color', '#690F0D').text(error_string);
     $("#upload_file_bar").removeClass('progress-bar-success').addClass('progress-bar-danger');
   }
 

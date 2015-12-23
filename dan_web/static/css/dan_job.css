@@ -4,8 +4,14 @@
     color: rgb(240, 240, 240);
     background-color: rgb(50, 50, 100);
     outline: none;
+    border-radius: 6px;
+    padding: 5px;
 }
 
+p.log_text {
+    word-wrap: break-word;
+    margin-bottom: 2px;
+}
 
 .required:after {
     content: "*";

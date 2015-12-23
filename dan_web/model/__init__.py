@@ -66,6 +66,7 @@ def init_db(app):
 
         @classmethod
         def delete_by_user_name(cls, user_name):
+            # fixme: 这里是不是也可以使用active标志, 不过user删除较少先不改
             user = cls.query.filter_by(user_name=user_name)
             user.first().delete_user_dir()
             user.delete()
@@ -153,18 +154,18 @@ def init_db(app):
                            autoincrement=True)
         job_name = db.Column(db.String(30), nullable=False)
         job_type = db.Column(db.String(20), nullable=False)
-        job_conf = db.Column(db.String(50), nullable=False)
+        job_conf = db.Column(db.String(50))
         job_status = db.Column(db.String(10), nullable=False) # starting, running, failed, success
-        log_file = db.Column(db.String(50), nullable=False)
+        log_file = db.Column(db.String(50))
         log_deleted = db.Column(db.BOOLEAN, db.ColumnDefault(False))
         active = db.Column(db.BOOLEAN, db.ColumnDefault(True))
         create_time = db.Column(db.DATETIME, db.ColumnDefault(datetime.datetime.utcnow()))
         end_time = db.Column(db.DATETIME)
         running_pid = db.Column(db.Integer)
-        user_id = db.Column('user_id', db.Integer, db.ForeignKey('user.user_id'))
+        user_id = db.Column('user_id', db.Integer, db.ForeignKey('USER.user_id'), nullable=False)
 
         def __init__(self, user_id, job_name, job_type):
-            self.uesr_id = user_id
+            self.user_id = user_id
             self.job_name = job_name
             self.job_type = job_type
             self.job_status = "starting"
@@ -176,27 +177,47 @@ def init_db(app):
             if not "job_name" in conf or not "job_type" in conf:
                 # 必要的配置没有提供
                 return None
-            adapter =  get_adapter(conf["job_type"])
+            adapter =  get_adapter([('job_type', conf["job_type"])])
+            import pdb
+            pdb.set_trace()
             if adapter is None:
                 # 无效的job_type
                 return None
-            if not adapter.required < conf:
+            if not set(adapter.required.keys()) < set(conf.keys()):
                 # fixme:还没想好optional怎么处理, 先不管
                 # 必要的配置没有提供
                 return None
+            valid_conf_name_set = set(adapter.required.keys()).union(set(adapter.optional.keys()))
             conf_obj = {key:value for key,value in conf.iteritems()
-                        if key in adapter.required.union(adapter.optional)}
-            # fixme: 没给job_conf加随机数, 因为job_id暂时是唯一的
-            ins = cls(user_id, conf["job_name"], conf["job_type"])
-            # 写入conf文件
-            ins.job_conf = str(ins.job_id) + '_conf.json'
-            json.dump(conf_obj, os.path.join(User.get(user_id).get_user_conf_dir(),
-                                             ins.job_conf))
+                        if key in valid_conf_name_set}
 
-            # 生成log file 暂时也没有给log file加随机数
-            # fixme: 先使用一个独立的文件夹了, 如果要用tmpdir以后再说
-            ins.log_file = str(ins.job_id) + '.log'
-            return ins
+            # fixme: 没给job_conf加随机数, 因为job_id暂时是唯一的
+            new_job = cls(user_id, conf["job_name"], conf["job_type"])
+            try:
+                db.session.add(new_job)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print e
+                return None
+            else:
+            # 写入conf文件
+                new_job.job_conf = str(new_job.job_id) + '_conf.json'
+                json.dump(conf_obj, open(os.path.join(User.get(user_id).get_user_conf_dir(),
+                                                  new_job.job_conf), 'w'))
+
+                # 生成log file 暂时也没有给log file加随机数
+                # fixme: 先使用一个独立的文件夹了, 如果要用tmpdir以后再说
+                new_job.log_file = str(new_job.job_id) + '.log'
+                try:
+                    db.session.add(new_job)
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    print e
+                    return None
+                return new_job
+
 
         def get_id(self):
             """
@@ -208,12 +229,16 @@ def init_db(app):
             user_conf_dir = User.get(self.user_id).get_user_conf_dir()
             conf_file_path = os.path.join(user_conf_dir, self.job_conf)
             # fixme: 错误处理是在这里做还是在外面catch这里要统一. 感觉在这里做比较较好. 那这样的话如果失败需要一个error_string.
-            conf = json.load(conf_file_path)
+            conf = json.load(open(conf_file_path, 'r'))
             return conf
+
+        def get_log_file(self):
+            return os.path.join(User.get(self.user_id).get_user_log_dir(),
+                                self.log_file)
 
         @classmethod
         def get_job_list_by_user_id(cls, user_id):
-            return cls.query.filter_by(user_id=user_id, active=True)
+            return cls.query.filter_by(user_id=user_id, active=True).all()
 
         @classmethod
         def get(cls, job_id):
@@ -230,7 +255,9 @@ def init_db(app):
 
         @classmethod
         def delete_by_job_id(cls, job_id):
-            cls.get(job_id).delete()
+            job = cls.get(job_id)
+            job.active = False
+            db.session.add(job)
             db.session.commit()
 
 

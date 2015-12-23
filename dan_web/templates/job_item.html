@@ -6,7 +6,9 @@
 
 
 {% block main %}
-<h2 class="page-header">Job Operation</h2>
+<h2 class="page-header">{{ job_name }}</h2>
+<h3 class="page-header" style="color: #1E5482;">{{ job_type }}</h2>
+
 <div class="row" style="margin-bottom: 30px">
   <div class="col-lg-7">
     <table class="table table-striped job_conf">
@@ -32,30 +34,35 @@
 
   <div class="col-lg-3">
     <!-- job operation -->
-    <div class="list-group">
-      <button type="button" class="btn btn-warning list-group-item" id="stop_job">中止该Job</button>
-      <button type="button" class="btn btn-danger list-group-item" id="delete_job">删除该Job</button>
+    <div class="list-group" style="width: 50%; margin: 30% 0 30% 0;">
+      <button type="button" class="btn btn-default list-group-item" id="stop_job">中止该Job</button>
+      <hr>
+      <button type="button" class="btn btn-default list-group-item" id="delete_job">删除该Job</button>
     </div>
   </div>
 </div>
 
 <h2 class="page-header">Job Status</h2>
 
-<div class="row">
+<div class="row"  style="margin-bottom: 20px; padding: 10px; border-radius:6px; background-color: {{ job_status[1] }};">
+  <div class="col-lg-5 col-lg-offset-1"><p style="font-size: 25px; font-weight: 400; color:white">{{ job_status[0] }}</p></div>
+  <!-- <span class="label label-pill label-{{ job_status[1] }}" style="padding: 10px;">{{ job_status[0] }}</span>-->
   <div class="col-lg-3 col-lg-offset-2">
-    <span class="label label-pill label-{{ job_status[1] }}">job_status[0]</span>
-  </div>
-  <div class="col-lg-3 col-lg-offset-2">
-    <button type="button" class="btn btn-info" id="show_job_log">查看Job Log</button>
+    <button type="button" class="btn btn-info {{ 'disabled' if job_status[0] == starting else '' }}" id="log_job" style="margin-top: 5px;">查看Job Log</button>
   </div>
 </div>
+
+
 <div class="row">
-  <div class="col-lg-6 col-lg-offset-3">
+  <div class="col-lg-8 col-lg-offset-2">
     <div class="log_terminal">
-      <p> one log</p>
-      <p> another log</p>
-      <p> longlongllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllog </p>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block inlinescript_index %}
+<script>
+  var current_job_id = "{{ job_id }}";
+</script>
 {% endblock %}

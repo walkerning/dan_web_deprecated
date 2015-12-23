@@ -3,9 +3,9 @@
 Dan web
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 import os
-import logging
+import subprocess
 
 import flask as _f
 from flask.ext import login as _l
@@ -15,7 +15,8 @@ from flask_sockets import Sockets
 from dan_web.control import upload as _u
 from dan_web.helper import success_json, fail_json
 from dan_web.model import init_db
-# from dan_web.adapter.formview_adapter import FormViewAdapter
+
+from dan_web.job_runner import read_log_and_send
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,12 +42,42 @@ from dan_web.control.job import job_blueprint
 app.register_blueprint(job_blueprint, url_prefix="/job/")
 
 # websocket, need wsgi middleware to correctly handle the websocket environ
-sockets = Sockets(app)
+sockets = Sockets(app) # patch app.wsgi_app for dispatching to ws handler with the app context
+
 @sockets.route('/job/realtime_log')
+@_l.login_required
 def realtime_log(ws):
-    while True:
-        message = ws.receive()
-        ws.send(message)
+    """
+    Get realtime logs by long-time websocket connection."""
+    if ws.environ.get('wsgi.url_scheme', 'http') + '://' + ws.environ.get('HTTP_HOST', '127.0.0.1') != ws.origin:
+        # 不同源拒绝连接
+        return
+    else:
+        job_id = ws.receive()
+        try:
+            job = Job.get_job_of_user_id(int(job_id), _l.current_user.user_id)
+            if job is None:
+                return
+        except:
+            # job_id无效或者不是当前用户的job
+            return
+        else:
+            if job.job_status == 'starting':
+                ws.send("Error: 该Job还没有开始运行")
+            elif job.log_deleted:
+                ws.send("Error: 该Job运行的Log已经被删除")
+            else:
+                log_file = job.get_log_file()
+                if not os.path.isfile(log_file):
+                    # ???
+                    ws.send("Error: 该Job可能没有生成Log文件")
+                elif job.job_status != 'running':
+                    # logfile is not changing, just return the content
+                    for message in iter(open(log_file, 'r').readline, ''):
+                        ws.send(message)
+                else:
+                    read_log_and_send(ws, log_file)
+
 
 
 @login_manager.user_loader
@@ -153,12 +184,6 @@ def logout():
     return _f.redirect(_f.url_for('login'))
 
 
-@app.before_first_request
-def setup_logging():
-    if not app.debug:
-        # In production mode, add log handler to sys.stderr.
-        app.logger.addHandler(logging.StreamHandler())
-        app.logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
     import sys
@@ -168,5 +193,4 @@ if __name__ == "__main__":
         host = "127.0.0.1"
     PORT = 8000
     app.debug = True
-    #app.secret_key = 'AdddddddssfadfaXHH!jmN]LWX/,?RT'
     app.run(port=PORT, host=host)

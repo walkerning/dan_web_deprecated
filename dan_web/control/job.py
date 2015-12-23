@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import os
+import json
 
 import flask as _f
 from flask.ext import login as _l
@@ -8,7 +9,7 @@ from flask.ext import login as _l
 from dan_web.helper import (success_json, fail_json, get_adapter)
 from dan_web.model import (User, Job)
 from dan_web.adapter.formview_adapter import FormViewAdapter
-from dan_web import view_conf
+from dan_web.view_conf import ViewConfer
 
 here = os.path.dirname(os.path.abspath(__file__))
 app_root = os.path.dirname(here)
@@ -16,6 +17,8 @@ app_root = os.path.dirname(here)
 job_blueprint = _f.Blueprint('job', __name__)
 
 fv_adapter = FormViewAdapter(__name__, 'arg_templates')
+
+view_confer = ViewConfer()
 
 @job_blueprint.route('view/<job_id>', methods=["GET"])
 @_l.login_required
@@ -28,10 +31,11 @@ def job_item(job_id):
     if job is None:
         return _f.abort(404)
     else:
-        job_status = (job.job_status, view_conf.status_to_label(job.job_status))
-        return _f.render_template("job_item.html", now_active_tab=job.job_name,
-                                  job_list=job_list, title="任务管理",
-                                  job_conf=job.get_conf(),
+        job_status = (job.job_status, view_confer.status_to_color(job.job_status))
+        return _f.render_template("job_item.html", now_active_tab="jobid_" + str(job.job_id),
+                                  job_id=str(job.job_id), title="任务管理",
+                                  job_list=job_list, job_conf=job.get_conf(),
+                                  job_name=job.job_name, job_type=view_confer.job_type_to_desc(job.job_type),
                                   job_status=job_status)
 
 @job_blueprint.route('view/create', methods=["GET", "POST"])
@@ -85,21 +89,32 @@ def post_ajax():
     """
     实现所有表单里需要post_ajax的逻辑.
     如果以后类型更多, 应该考虑把实际处理交给adapter, 每个工具的adapter去查看哪个配置选择的话需要新的哪个配置"""
-    # fixme: 感觉还是需要tool type也一起, 然后给每个tool做一个adapter.. 诶呀以后再改吧
-    name = _f.request.form.get('name', '')
-    value = _f.request.form.get('value', '')
-    if name == 'job_type':
-        # fixme: 真的需要一个adapter!!!
-        adapter = get_adapter(value)
-        if adapter is None:
-            return fail_json(error_string='错误的job类型')
+    json_str = _f.request.form.get('data', '')
+    if not json_str:
+        return fail_json(error_string='错误的参数')
+    try:
+        json_data = json.loads(json_str)
+    except Exception:
+        return fail_json(error_string='错误的json格式')
+    name = json_data.get('name', '')
+    value = json_data.get('value', '')
+    create_by_list = json_data.get('create_by_list', [])
+    if not name or not value:
+        return fail_json(error_string='错误的参数')
+    adapter_layers = []
+    for create_by in reversed(create_by_list):
+        create_by_name = create_by.get('name', '')
+        create_by_value = create_by.get('value', '')
+        if not create_by_name or not create_by_value:
+            return fail_json(error_string='错误的Adapter')
         else:
-            new_form_groups = fv_adapter.render_form(adapter.required, addition_info='create_by="job_type"')
-            new_form_groups += fv_adapter.render_form(adapter.optional, addition_info='create_by="job_type"')
-            return success_json(data=new_form_groups)
-    print(_f.request.form)
-    if name == 'layer_method':
-        # fixme: 前面那个proto的还好说, 这里如果不用层级的adapter感觉太傻逼了.
-        # 想想怎么弄这个
-        # new_form_groups = fv_adapter.render_form()
-        pass
+            adapter_layers.append((create_by_name, create_by_value))
+    adapter_layers.append((name, value))
+    adapter = get_adapter(adapter_layers)
+
+    if adapter is None:
+        return fail_json(error_string='错误的Adapter')
+    else:
+        new_form_groups = fv_adapter.render_form(adapter.required, addition_info='create_by="%s"'%name, required=True)
+        new_form_groups += fv_adapter.render_form(adapter.optional, addition_info='create_by="%s"'%name)
+        return success_json(data=new_form_groups)

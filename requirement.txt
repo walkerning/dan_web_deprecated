@@ -1,5 +1,23 @@
+# flask
 Flask==0.10.1
 Jinja2==2.8
 MarkupSafe==0.23
 Werkzeug==0.11.2
 itsdangerous==0.24
+
+# login
+Flask-Login==0.3.2
+
+# database
+MySQL-python==1.2.5
+Flask-SQLAlchemy==2.1
+SQLAlchemy==1.0.10
+
+# gevent worker is used with gunicorn server
+gevent==1.0.2
+greenlet==0.4.9
+gunicorn==19.4.1
+
+# websocket
+git+https://github.com/philipn/flask-sockets#egg=flask-sockets
+gevent-websocket==0.9.5

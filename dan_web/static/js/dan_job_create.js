@@ -1,11 +1,13 @@
+debug_item = null;
 !function($) {
   function option_generate(name) {
     return '<option value="' + name + '">' + name + '</option>';
   }
 
   function bind_remove_listeners (creator) {
+    var creator_name = creator.attr("name");
     creator.on("remove", function() {
-      $(".form-group[create_by" + creator.attr("name") + "']").remove();
+      $(".form-group[create_by='" + creator_name + "']").remove();
     });
   }
 
@@ -64,10 +66,14 @@
 
       while (1) {
         var this_create_by_name = loop_item.closest('div.form-group').attr("create_by");
+        if (!this_create_by_name) {
+          break;
+        }
         var this_create_by_ele = $("div.form-group[name='" + this_create_by_name + "']");
-        if (this_create_by_name && this_create_by_ele) {
+        if (this_create_by_ele) {
           var child_value_ele = this_create_by_ele.find('.form-control, .form-control1');
-          var this_create_by_value = this_create_by_ele.val();
+          var this_create_by_value = child_value_ele.val();
+
           this_create_by_list.push({name: this_create_by_name,
                                     value: this_create_by_value});
           loop_item = this_create_by_ele;
@@ -81,11 +87,11 @@
         url: FORM_POST_AJAX_URL,
         method: "POST",
         dataType: "json",
-        data: {
+        data: {data: JSON.stringify({
           name: this_name,
           value: this_value,
           create_by_list: this_create_by_list
-        },
+        })},
         success: function (response) {
           if (response.status == 'success') {
             // 把原有的那些删掉[create_by=]
@@ -100,7 +106,7 @@
             bind_remove_listeners($this);
           }
           else {
-            swal("获取新表单失败, 请重新刷新");
+            swal("获取新表单失败, 请重新刷新", response.error_string);
           }
         }
       });

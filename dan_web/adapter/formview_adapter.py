@@ -2,6 +2,7 @@
 """
 根据工具类型, 渲染所需表单"""
 
+from __future__ import unicode_literals
 import os
 
 from jinja2 import Environment, PackageLoader, Template
@@ -22,7 +23,7 @@ class FormViewAdapter(object):
             self.name = app
         self.env = Environment(loader=PackageLoader(self.name, templates_dir))
 
-    def render_form(self, arg_dict, addition_info=''):
+    def render_form(self, arg_dict, addition_info='', required=False):
         """
         Render a argument form."""
 
@@ -31,6 +32,6 @@ class FormViewAdapter(object):
         for arg_name, render_conf in arg_dict.iteritems():
             # fixme: 如果找不到template的错误处理
             template = self.env.get_template(render_conf[0] + '.html')
-            form_group_list.append(basic_form_group_template.render(addition_info=addition_info, form_group_content=template.render(ARG_NAME=arg_name, **render_conf[1])))
+            form_group_list.append(basic_form_group_template.render(ARG_NAME=arg_name, addition_info=addition_info, form_group_content=template.render(ARG_NAME=arg_name, REQUIRED='required' if required else '', **render_conf[1])))
 
         return '\n'.join(form_group_list)

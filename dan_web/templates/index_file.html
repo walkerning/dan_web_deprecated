@@ -9,22 +9,36 @@
 <div class="row" style="margin-bottom: 30px">
   <div class="col-lg-4" style="margin-left: 30px">
     <form enctype="multipart/form-data" id="upload_form" class="form-horizontal">
-      <div class="form-group">
-        <label for="upload_file_type">文件类型</label>
-        <select id="upload_file_type" class="form-control" style="width: 50%">
-          <option value="caffemodel">caffemodel</option>
-          <option value="prototxt">prototxt</option>
-        </select>
+      <div class="form-group vdivide">
+        <div class="col-lg-5">
+          <label for="upload_file_type">文件类型</label>
+        </div>
+        <div class="col-lg-7">
+          <select id="upload_file_type" class="form-control">
+            <option value="caffemodel">caffemodel</option>
+            <option value="prototxt">prototxt</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="file_select">上传文件</label>
-        <input type="file" id="file_select" name="file" />
+      <div class="form-group" role="separator"><hr></div>
+      <div class="form-group vdivide">
+        <div class="col-lg-5">
+          <label for="file_select">上传文件</label>
+        </div>
+        <div class="col-lg-7">
+          <input type="file" id="file_select" class="form-control" name="file" />
+        </div>
       </div>
-      <button type="submit" class="btn btn-default" id="file_upload_btn">上传</button>
+      <div class="form-group" role="separator"><hr></div>
+      <div class="form-group">
+        <div  class="col-lg-offset-5">
+          <button type="submit" class="btn btn-default" id="file_upload_btn">上传</button>
+        </div>
+      </div>
     </form>
-  </div>
+</div>
 
-  <div class="col-lg-3">
+  <div class="col-lg-2 col-lg-offset-1">
     <div class="progress active">
       <div id="upload_file_bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
       </div>

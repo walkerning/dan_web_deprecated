@@ -12,16 +12,19 @@
         <li>
           <a><p style="color: black; font-size: 20px">Dan Web</p></a>
           </li>
-        <li><a class="side_item" name="file-manage" href="{{ url_for('index') }}">文件管理</a></li>
+        <li><a class="side_item" id="file-manage" href="{{ url_for('index') }}">文件管理</a></li>
       </ul>
+      <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">
         {% for job in job_list %}
-        <li><a class="side_item job_item" name="{{ job[0] }}" href="/view/{{ job[1] }}">{{ job[0] }}</a></li>
+        <li><a class="side_item job_item" id="jobid_{{ job[1] }}" name="{{ job[0] }}" href="{{ url_for( 'job.job_item', job_id=job[1]) }}">{{ job[0] }}</a></li>
         {% endfor %}
       </ul>
+      <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">
-        <li><a class="side_item" href="{{ url_for('job.job_create' )}}" name="create-new-job">创建新Job</a></li>
+        <li><a class="side_item" href="{{ url_for('job.job_create' )}}" id="create-new-job">创建新Job</a></li>
       </ul>
+      <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">
         <li><a class="side_item" href="{{ url_for('logout') }}">登出</a></li>
       </ul>
@@ -40,7 +43,8 @@
 {% block inlinescript %}
 <script>
 $("document").ready(function() {
-$('a.side_item[name="{{ now_active_tab }}"]').parent().addClass("active");
+$('a.side_item#{{ now_active_tab }}').parent().addClass("active");
 })
-</script>
+   </script>
+{% block inlinescript_index %}{% endblock %}
 {% endblock %}
