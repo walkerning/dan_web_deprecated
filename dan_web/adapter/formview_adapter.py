@@ -31,7 +31,7 @@ class FormViewAdapter(object):
 
         for arg_name, render_conf in arg_dict.iteritems():
             # fixme: 如果找不到template的错误处理
-            template = self.env.get_template(render_conf[0] + '.html')
-            form_group_list.append(basic_form_group_template.render(ARG_NAME=arg_name, addition_info=addition_info, form_group_content=template.render(ARG_NAME=arg_name, REQUIRED='required' if required else '', **render_conf[1])))
+            template = self.env.get_template(render_conf['template'] + '.html')
+            form_group_list.append(basic_form_group_template.render(ARG_NAME=arg_name, addition_info=addition_info, form_group_content=template.render(ARG_NAME=arg_name, REQUIRED='required' if required else '', **render_conf['template_args'])))
 
         return '\n'.join(form_group_list)

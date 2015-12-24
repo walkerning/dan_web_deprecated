@@ -162,10 +162,6 @@
         $(".file_num[name='" + dir_name +"']").html(response.file_list.length);
 
         // register event handler for these buttons
-        // first remove all the handlers for click event, or multiple handler will be called
-        // fixme: 都不知道jquery可不可以选择desetor, 如果可以的话就不需要unbind所有感觉比较对
-        //$("a.download_file").unbind('click');
-        //$("a.delete_file").unbind('click');
         $("a.download_file[dir_name='" + dir_name + "']").click(function () {
           var filename = $(this).attr('name');
           var dir_name = $(this).attr('dir_name');

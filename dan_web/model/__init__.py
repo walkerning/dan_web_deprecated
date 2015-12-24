@@ -8,7 +8,8 @@ from werkzeug import generate_password_hash, check_password_hash
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
-from dan_web.helper import chdir, get_adapter
+from dan_web.helper import chdir
+from dan_web.adapter.job_adapter import get_adapter
 
 approot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,6 +50,7 @@ def init_db(app):
                 new_user.make_dirs()
                 return new_user
 
+        # fixme: 做了很多重复的工作, 可以考虑用一个元类啥的实现比较好
         @classmethod
         def get(cls, user_id):
             # 用user_id构建一个User并返回
@@ -143,6 +145,9 @@ def init_db(app):
             else:
                 return os.listdir(dir_path)
 
+        def get_running_jobs(self):
+            return Job.query.filter_by(active=True, user_id=self.user_id, job_status='running').all()
+
 
     class Job(db.Model):
         __tablename__ = 'JOB'
@@ -222,15 +227,22 @@ def init_db(app):
 
         def get_conf(self):
             # 读配置文件并返回配置dict
-            user_conf_dir = User.get(self.user_id).get_user_conf_dir()
-            conf_file_path = os.path.join(user_conf_dir, self.job_conf)
             # fixme: 错误处理是在这里做还是在外面catch这里要统一. 感觉在这里做比较较好. 那这样的话如果失败需要一个error_string.
-            conf = json.load(open(conf_file_path, 'r'))
-            return conf
+            return json.load(open(self.abs_conf_file, 'r'))
 
-        def get_log_file(self):
+        def get_abs_data_file(self, data_file_path):
+            return os.path.join(User.get(self.user_id).get_user_dir(),
+                                data_file_path)
+
+        @property
+        def abs_log_file(self):
             return os.path.join(User.get(self.user_id).get_user_log_dir(),
                                 self.log_file)
+
+        @property
+        def abs_conf_file(self):
+            return os.path.join(User.get(self.user_id).get_user_conf_dir(),
+                                self.job_conf)
 
         @classmethod
         def get_job_list_by_user_id(cls, user_id):

@@ -67,7 +67,7 @@ def realtime_log(ws):
             elif job.log_deleted:
                 ws.send("Error: 该Job运行的Log已经被删除")
             else:
-                log_file = job.get_log_file()
+                log_file = job.abs_log_file
                 if not os.path.isfile(log_file):
                     # ???
                     ws.send("Error: 该Job可能没有生成Log文件")

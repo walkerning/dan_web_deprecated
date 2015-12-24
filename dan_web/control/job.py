@@ -6,10 +6,14 @@ import json
 import flask as _f
 from flask.ext import login as _l
 
-from dan_web.helper import (success_json, fail_json, get_adapter)
+from dan_web.helper import success_json, fail_json
 from dan_web.model import (User, Job)
+from dan_web.adapter.job_adapter import  get_adapter
 from dan_web.adapter.formview_adapter import FormViewAdapter
 from dan_web.view_conf import ViewConfer
+
+from dan_web.job_runner import JobRunner
+
 
 here = os.path.dirname(os.path.abspath(__file__))
 app_root = os.path.dirname(here)
@@ -52,14 +56,25 @@ def job_create():
     elif _f.request.method == "POST":
         # create a new job
         conf = _f.request.form['conf']
-        new_job = Job.create_job(_l.current_user, conf)
+        new_job = Job.create_job(_l.current_user.user_id, conf)
         if new_job is None:
-            # 少配置
-            pass
+            # fixme: 创建失败, 原因以后再细分
+            # 超过了job限制, 配置不完全(客户端也会检验)
+            _f.flash('Job新建失败: 不能新建', 'danger')
+            return _f.redirect(_f.url_for('job.job_create'))
         else:
-            # 新建subprocess, 并脱离主机进程跑, 该进程不能出错，如果该进程捕获到svd_tool出错,不管是exit status还是return false, 都自己将数据库的running status写(想要使用这里的User和Job的Model, 自己调用一次init_db?)，或者发邮件
-            pass
-
+            # 新建subprocess, 设置logfile, 并脱离主机进程跑. 该进程不能出错，如果该进程捕获到svd_tool出错,不管是exit status还是return false, 都自己将数据库的running status写(想要使用这里的User和Job的Model, 自己调用一次init_db?)，或者发邮件
+            # fixme: 可以直接把new_job传进去吗...不太确定, 试一试
+            try:
+                job_runner = JobRunner(new_job) # _l.current_user也要传进去
+            except Exception as e:
+                # fixme: 有什么情况会导致新建成功但无法开始运行, 比如达到同时运行的job上限了?
+                # fixme: 那肯定需要一个按钮是run_job!
+                _f.flash('Job新建成功, 但无法开始运行: ' + repr(e), 'danger')
+                return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
+            job_runner.run() # run() method will create a new subprocess and run it
+            # fixme: 如果flash变得好看了, 考虑加flash提示...
+            return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
 
 @job_blueprint.route('form/pre_ajax', methods=["POST"])
 @_l.login_required
