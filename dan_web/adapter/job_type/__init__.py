@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 from dan_web.adapter.job_adapter import Tool
-print __name__
+
 class Adapter_svd_tool(Tool):
     __name__ = "svd_tool"
     RECURSIVE_ADAPTER_LIST = ["post_ajax_selector"]
@@ -65,4 +65,15 @@ class Adapter_svd_tool(Tool):
     ]
 
     def convert_conf(self, conf_dict, addition_converter=None):
-        return super(Adapter_svd_tool, self).convert_conf(conf_dict, now_package=__package__, addition_converter=addition_converter)
+        super_converted =  super(Adapter_svd_tool,
+                                 self).convert_conf(conf_dict,
+                                                    now_package=__package__,
+                                                    addition_converter=addition_converter)
+        # tool-specific adapting
+        layer_string = super_converted['layer_name'] + ',' + super_converted['layer_method']['layer_method']
+        layer_arg = super_converted['layer_method'].get('layer_arg', '')
+        if layer_arg:
+            layer_string += ',' + layer_arg
+
+        super_converted['layers'] = [layer_string]
+        return super_converted

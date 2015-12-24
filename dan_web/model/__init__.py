@@ -138,8 +138,7 @@ def init_db(app):
                         print e
 
         def get_file_name_list(self, dir_name):
-            relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
-            dir_path = os.path.join(approot, relative_dir_path, dir_name)
+            dir_path = self.get_user_dir(dir_name)
             if not os.path.isdir(dir_path):
                 return []
             else:
@@ -163,7 +162,7 @@ def init_db(app):
         active = db.Column(db.BOOLEAN, db.ColumnDefault(True))
         create_time = db.Column(db.DATETIME, db.ColumnDefault(datetime.datetime.utcnow()))
         end_time = db.Column(db.DATETIME)
-        running_pid = db.Column(db.Integer)
+        #running_pid = db.Column(db.Integer)
         user_id = db.Column('user_id', db.Integer, db.ForeignKey('USER.user_id'), nullable=False)
 
         def __init__(self, user_id, job_name, job_type):
@@ -233,6 +232,19 @@ def init_db(app):
         def get_abs_data_file(self, data_file_path):
             return os.path.join(User.get(self.user_id).get_user_dir(),
                                 data_file_path)
+
+        def set_end_status(self, end_status):
+            if end_status is True:
+                self.job_status = "success"
+            else:
+                self.job_status = "failed"
+            self.end_time = datetime.datetime.utcnow()
+            db.session.add(self)
+            db.session.commit()
+
+        @property
+        def pid_file(self):
+            return os.path.join('/tmp/dan_web/', self.user_id, str(self.job_id)+ '.pid')
 
         @property
         def abs_log_file(self):

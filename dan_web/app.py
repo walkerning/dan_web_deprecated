@@ -70,7 +70,7 @@ def realtime_log(ws):
                 log_file = job.abs_log_file
                 if not os.path.isfile(log_file):
                     # ???
-                    ws.send("Error: 该Job可能没有生成Log文件")
+                    ws.send("Error: 该Job还没有生成Log文件")
                 elif job.job_status != 'running':
                     # logfile is not changing, just return the content
                     for message in iter(open(log_file, 'r').readline, ''):

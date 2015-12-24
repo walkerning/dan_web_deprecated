@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os
+import signal
+import time
 import subprocess
 
 from dan_web.adapter.job_adapter import get_adapter
 from dan import load_command_packages
 from dan_web.job_runner.conf import END_LOG_TOKEN
 from dan_web.job_runner.error import RunnerException
+from dan_web.job_runner.runner import JobRunnerDaemon
 
 
 def read_log_and_send(ws, log_file):
@@ -37,12 +40,43 @@ def read_log_and_send(ws, log_file):
 
     p.terminate()
 
+def kill_running_job(job, trys=5):
+    if job.job_status != 'running':
+        return
+    else:
+        try:
+            with open(job.pid_file, 'r') as pf:
+                pid = int(pf.read().strip())
+        except IOError:
+            print "No pid file, something goes wrong!"
+            raise
+        #if pid != job.running_pid:
+        # fixme: 以后应该不需要runing_pid这个项
+        try_time = 0
+        try:
+            while try_time < trys:
+                os.kill(pid, signal.SIGTERM)
+                try_time += 1
+                time.sleep(0.1) # 最多引入0.5s的延时, 记得先把其他按钮给禁掉
+        except OSError, err:
+            err = str(err)
+            if err.find("No such process") > 0:
+                if os.path.exists(job.pid_file):
+                    os.remove(job.pid_file)
+            else:
+                print str(err)
+                # fixme: just for test here
+                raise
+
+
 
 class JobRunner(object):
     """
     The Job Runner! Core function of this website!"""
 
-    def __init__(self, job):
+    def __init__(self, job, db):
+        self._job = job
+        self._db = db
         self.job_adapter = get_adapter([('job_type', job.job_type)])
         for cmd_type, cmd_cls in load_command_packages():
             if cmd_type == job.job_type:
@@ -57,8 +91,27 @@ class JobRunner(object):
                                                                       job.get_abs_data_file})
         self.log_file = job.abs_log_file
         self.runner = self.job_cls.load_from_config(self.conf)
+        self.pid_file = job.get_pid_file()
 
     def run(self):
         """
         fork新进程开始运行, return新进程的pid"""
-        pid = os.fork()
+
+        job_runner = JobRunnerDaemon(self.runner, self.pid_file, self._job.set_end_status,
+                                     stdinout=self.log_file, stderr=self.log_file)
+        self._job.job_status = "running"
+        try:
+            center_pid = job_runner.start()
+            _, status = os.waitpid(center_pid, 0) #fixme: 会不会出问题...
+            if os.WIFEXITED(status):
+                exit_status = os.WEXITSTATUS(status)
+                if exit_status != 0:
+                    self._job.job_status = "failed"
+            else:
+                raise Exception('这不应该出现...debug!')
+
+        except Exception:
+            self._job.job_status = "failed"
+        # also need another try, except
+        self._db.session.add(self._job)
+        self._db.session.commit()
