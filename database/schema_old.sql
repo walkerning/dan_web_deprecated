@@ -1,3 +1,4 @@
+
 DROP TABLE JOB;
 DROP TABLE USER;
 
@@ -23,5 +24,4 @@ CREATE TABLE JOB(
      active BOOLEAN DEFAULT 1,
      create_time DATETIME,
      end_time DATETIME,
-     running_pid INT,
      FOREIGN KEY (user_id) REFERENCES USER(user_id));

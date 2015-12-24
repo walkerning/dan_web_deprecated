@@ -6,6 +6,9 @@
     outline: none;
     border-radius: 6px;
     padding: 5px;
+    /* auto scroll this log terminal */
+    height: 10px;
+    overflow-y: scroll;
 }
 
 p.log_text {

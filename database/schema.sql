@@ -23,5 +23,4 @@ CREATE TABLE JOB(
      active BOOLEAN DEFAULT 1,
      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
      end_time DATETIME,
-     running_pid INT,
      FOREIGN KEY (user_id) REFERENCES USER(user_id));

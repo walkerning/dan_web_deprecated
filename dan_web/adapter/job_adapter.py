@@ -4,7 +4,7 @@
 以及配置需要的template名字和参数"""
 
 from collections import OrderedDict
-from error import AdapterException
+from dan_web.error import AdapterException, ConfigException
 
 class ToolMeta(type):
     def __new__(mcls, name, bases, attrs):
@@ -31,12 +31,13 @@ class Tool(object):
     optional = []
     RECURSIVE_ADAPTER_LIST = []
     DEFAULT_CONVERTER = {
-        'int': int,
+        'int': int
     }
 
     def get_adapter(self, adapter_layer, now_package):
         """
         get son adapter."""
+        # fixme: the now_package thing is buggy! 换成self.__package__这样的
         now_package = '.'.join([now_package, self.__name__])
         adapter =  get_adapter([adapter_layer], now_package)
         if adapter is None:
@@ -44,21 +45,28 @@ class Tool(object):
         else:
             return adapter
 
-    def convert_recursive_conf(self, conf_name, conf_value, now_package):
-        son_adapter = self.get_adapter((conf_name, conf_value), now_package)
-        son_converted_conf = son_adapter.convert_conf(conf_dict)
+    def convert_recursive_conf(self, conf_name, conf_value, conf_dict, converter, now_package):
+        son_adapter = self.get_adapter((conf_name, conf_value), now_package)()
+        son_converted_conf = son_adapter.convert_conf(conf_dict,
+                                                      addition_converter=converter)
         return son_converted_conf
 
-    def convert_one_conf(self, value, flags, converter, **kwargs):
+    def convert_one_conf(self, value, flags, converter, conf_dict, **kwargs):
         for flag in flags:
             if flag in converter:
-                value = converter[flag](value)
+                if isinstance(converter[flag], list):
+                    # converter list
+                    for single_converter in converter[flag]:
+                        value = single_converter(value)
+                else:
+                    # single converter
+                    value = converter[flag](value)
             elif flag in self.DEFAULT_CONVERTER:
                 value = self.DEFAULT_CONVERTER[flag](value)
             elif flag == "recursive":
                 # 如果有多个flag, 记得将recursive放到最后
-                value = {kwargs['conf_name']: value}
-                value.update(self.convert_recursive_conf(kwargs['conf_name'], conf_value, kwargs['now_package']))
+                self.converted_conf.update(self.convert_recursive_conf(kwargs['conf_name'], value,
+                                                                       conf_dict, converter, kwargs['now_package']))
             else:
                 # fixme: 为了debug先raise
                 raise AdapterException("不能识别的flag")
@@ -69,16 +77,17 @@ class Tool(object):
                      addition_converter=None):
         """
         调用的时候切记使用now_package=__package__调用"""
-        converted_conf = {}
+        self.converted_conf = {}
         addition_converter = addition_converter or {}
         for conf_name, conf_meta in self.required.iteritems():
             if not conf_name in conf_dict:
                 # 缺少required配置
-                raise
+                raise ConfigException("No required configuration: %s" % conf_name)
 
-            converted_conf[conf_name] = self.convert_one_conf(conf_dict[conf_name],
+            self.converted_conf[conf_name] = self.convert_one_conf(conf_dict[conf_name],
                                                               conf_meta.get("convert_flags", []),
                                                               addition_converter,
+                                                              conf_dict,
                                                               now_package=now_package,
                                                               conf_name=conf_name)
 
@@ -87,12 +96,13 @@ class Tool(object):
             if conf_value is None:
                 continue
             else:
-                converted_conf[conf_name] = self.convert_one_conf(conf_dict[conf_name],
+                self.converted_conf[conf_name] = self.convert_one_conf(conf_dict[conf_name],
                                                                   conf_meta.get("convert_flags", []),
                                                                   addition_converter,
+                                                                  conf_dict,
                                                                   now_package=now_package,
                                                                   conf_name=conf_name)
-        return converted_conf
+        return self.converted_conf
 
 
 def get_adapter(adapter_layers, now_package=__package__):
@@ -100,7 +110,7 @@ def get_adapter(adapter_layers, now_package=__package__):
     mod_list, adapter_name = mod_list[:-1], 'Adapter_' + mod_list[-1]
     pkg = '.'.join([now_package] + mod_list)
     try:
-        adapter_mod =  __import__(pkg, fromlist=['just_for_right_most_one'])
+        adapter_mod =  __import__(pkg, fromlist=['just_for_the_rightmost_one'])
         adapter = getattr(adapter_mod, adapter_name, None)
 
         if adapter and issubclass(adapter, Tool) and not Tool is adapter:

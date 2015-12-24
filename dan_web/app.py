@@ -23,6 +23,10 @@ here = os.path.dirname(os.path.abspath(__file__))
 # init app
 app = _f.Flask(__name__)
 app.config.from_pyfile(os.path.join(here, 'app_conf.py'))
+
+for env_name, env_value in app.config.get('WRITE_TO_ENV', {}).iteritems():
+    os.environ[env_name] = env_value
+
 app.debug = True #just for debug
 
 # init database

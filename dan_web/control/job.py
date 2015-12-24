@@ -7,13 +7,17 @@ import flask as _f
 from flask.ext import login as _l
 
 from dan_web.helper import success_json, fail_json
-from dan_web.model import (User, Job)
-from dan_web.adapter.job_adapter import  get_adapter
-from dan_web.adapter.formview_adapter import FormViewAdapter
+from dan_web.model import (User, Job, db)
+from dan_web.model.share import get_shared_file_name_list
 from dan_web.view_conf import ViewConfer
+
+from dan_web.adapter.job_adapter import  get_adapter
+from dan_web.adapter.secure import secure_conf
+from dan_web.adapter.formview_adapter import FormViewAdapter
 
 from dan_web.job_runner import JobRunner
 
+from dan_web.error import ExpectedException
 
 here = os.path.dirname(os.path.abspath(__file__))
 app_root = os.path.dirname(here)
@@ -56,22 +60,39 @@ def job_create():
     elif _f.request.method == "POST":
         # create a new job
         conf = _f.request.form['conf']
-        new_job = Job.create_job(_l.current_user.user_id, conf)
-        if new_job is None:
-            # fixme: 创建失败, 原因以后再细分
+        # must secure user input a bit here
+        job_type = conf.get('job_type', None)
+        if not job_type:
+            _f.flash('Job新建失败: 没有指定Job类型', 'danger')
+            return _f.redirect(_f.url_for('job.job_create'))
+        try:
+            # fixme: 这个感觉在job里做更好, secure_conf里就可以不用重新update了
+            conf = secure_conf(job_type, conf)
+        except Exception:
+            # fixme: 先raiseprint()
+            raise
+        try:
+            new_job = Job.create_job(_l.current_user.user_id, conf)
+        except ExpectedException as e:
             # 超过了job限制, 配置不完全(客户端也会检验)
-            _f.flash('Job新建失败: 不能新建', 'danger')
+            _f.flash('Job新建失败: %s' % e, 'danger')
+            return _f.redirect(_f.url_for('job.job_create'))
+        except Exception as e:
+            # Internal Error, may be a bug, log to log file
+            # fixme: add traceback here
+            print(e)
+            _f.flash('Job新建失败', 'danger')
             return _f.redirect(_f.url_for('job.job_create'))
         else:
-            # 新建subprocess, 设置logfile, 并脱离主机进程跑. 该进程不能出错，如果该进程捕获到svd_tool出错,不管是exit status还是return false, 都自己将数据库的running status写(想要使用这里的User和Job的Model, 自己调用一次init_db?)，或者发邮件
-            # fixme: 可以直接把new_job传进去吗...不太确定, 试一试
+            # 新建子进程运行工具
             try:
-                job_runner = JobRunner(new_job) # _l.current_user也要传进去
-            except Exception as e:
+                job_runner = JobRunner(new_job, db)
+            except ExpectedException as e:
                 # fixme: 有什么情况会导致新建成功但无法开始运行, 比如达到同时运行的job上限了?
                 # fixme: 那肯定需要一个按钮是run_job!
                 _f.flash('Job新建成功, 但无法开始运行: ' + repr(e), 'danger')
                 return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
+            # fixme: 这个run也在里面raise? 应该不用吧
             job_runner.run() # run() method will create a new subprocess and run it
             # fixme: 如果flash变得好看了, 考虑加flash提示...
             return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
@@ -87,12 +108,13 @@ def pre_ajax():
         # 找出所有的prototxt, 还可以给用户提供几个软链接到通用的VGG,.把下载/删除那个软链接的按钮给关掉, 并且下载的处理函数检查一下
         input_proto_list = ['upload/' + x for x in _l.current_user.get_file_name_list('upload_prototxt')]
         input_proto_list += ['generated/' + x for x in _l.current_user.get_file_name_list('generated_prototxt')]
+        input_proto_list += ['shared/' + x for x in get_shared_file_name_list('*.prototxt')]
         return success_json(data=input_proto_list)
     elif name == 'input_caffemodel':
         # 找出所有的prototxt
         input_caffemodel_list = ['upload/' + x for x in _l.current_user.get_file_name_list('upload_caffemodel')]
         input_caffemodel_list += ['generated/' + x for x in _l.current_user.get_file_name_list('generated_caffemodel')]
-
+        input_caffemodel_list += ['shared/' + x for x in get_shared_file_name_list('*.caffemodel')]
         return success_json(data=input_caffemodel_list)
     else:
         # 以后如果要加更多还是放在adapter里, 其实还没有完全设计好...

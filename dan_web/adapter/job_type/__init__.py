@@ -15,14 +15,14 @@ class Adapter_svd_tool(Tool):
                 # 所需的配置
                 'CONFIG_NAME': '输入的prototxt'
             },
-            "convert_flags": ['data_file']
+            "convert_flags": ['input_file']
         }),
         ("input_caffemodel", {
             "template": "pre_ajax_selector",
             "template_args": {
                 'CONFIG_NAME': '输入的caffemodel'
             },
-            "convert_flags": ['data_file']
+            "convert_flags": ['input_file']
         }),
         ("output_proto", {
             "template": "plain_text_input",
@@ -30,7 +30,7 @@ class Adapter_svd_tool(Tool):
                 'CONFIG_NAME': '输出的prototxt',
                 'PLACEHOLDER': '会覆盖generated目录下的同名文件'
             },
-            "convert_flags": ['data_file']
+            "convert_flags": ['output_proto']
         }),
         ("output_caffemodel", {
             "template": "plain_text_input",
@@ -38,7 +38,7 @@ class Adapter_svd_tool(Tool):
                 'CONFIG_NAME': '输出的caffemodel',
                 'PLACEHOLDER': '会覆盖generated目录下的同名文件'
             },
-            "convert_flags": ['data_file']
+            "convert_flags": ['output_caffemodel']
         }),
         ("layer_name", {
             "template": "plain_text_input",
@@ -52,7 +52,8 @@ class Adapter_svd_tool(Tool):
             "template_args": {
                 'CONFIG_NAME': '分解方法',
                 'AVAILABLE_OPTIONS': [('rank', '保留确定秩数')],
-            }
+            },
+            "convert_flags": ['recursive']
         })
     ]
 
@@ -69,9 +70,11 @@ class Adapter_svd_tool(Tool):
                                  self).convert_conf(conf_dict,
                                                     now_package=__package__,
                                                     addition_converter=addition_converter)
+        import pdb
+        pdb.set_trace()
         # tool-specific adapting
-        layer_string = super_converted['layer_name'] + ',' + super_converted['layer_method']['layer_method']
-        layer_arg = super_converted['layer_method'].get('layer_arg', '')
+        layer_string = super_converted['layer_name'] + ',' + super_converted['layer_method']
+        layer_arg = super_converted.get('layer_arg', '')
         if layer_arg:
             layer_string += ',' + layer_arg
 

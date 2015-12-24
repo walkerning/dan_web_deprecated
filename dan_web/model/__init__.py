@@ -10,6 +10,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
 from dan_web.helper import chdir
 from dan_web.adapter.job_adapter import get_adapter
+from dan_web.error import ConfigException
 
 approot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -108,11 +109,14 @@ def init_db(app):
             relative_dir_path = os.path.join(app.config['USER_CONF_DIR'], str(self.user_id))
             user_conf_dir_path = os.path.join(approot, relative_dir_path)
             return user_conf_dir_path
-
+        
         def get_user_dir(self, dir_name=""):
             relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
             user_dir_path = os.path.join(approot, relative_dir_path)
             return os.path.join(user_dir_path, dir_name)
+
+        def get_user_tmp_dir(self, dir_name=""):
+            return os.path.join('/tmp/dan_web/', str(self.user_id))
 
         def delete_user_file(self, dir_name, file_name):
             # fixme: 是否需要更严格的检查, 外面已经检查过了, 但是这里是不是最好也检查一遍
@@ -122,12 +126,14 @@ def init_db(app):
             user_dir_path = self.get_user_dir()
             user_conf_dir_path = self.get_user_conf_dir()
             user_log_dir_path = self.get_user_log_dir()
+            user_tmp_dir_path = self.get_user_tmp_dir()
 
             # shutil.rmtree(user_dir_path, ignore_errors=True)
             # fixme: 怎么把它们弄成一个配置文件, 只能装到working set吗
             os.mkdir(user_dir_path)
             os.mkdir(user_conf_dir_path)
             os.mkdir(user_log_dir_path)
+            os.mkdir(user_tmp_dir_path)
             # for test
             with chdir(user_dir_path):
                 for _dir in ['upload_prototxt', 'upload_caffemodel',
@@ -177,16 +183,16 @@ def init_db(app):
             conf: 包含所有配置的dict, 先要检查配置是否完全"""
             if not "job_name" in conf or not "job_type" in conf:
                 # 必要的配置没有提供
-                return None
+                # 这里还是改成raise的接口吧...
+                raise ConfigException("没有提供Job name或Job type")
             adapter =  get_adapter([('job_type', conf["job_type"])])
 
             if adapter is None:
                 # 无效的job_type
-                return None
+                raise ConfigException("无效的Job type: %s" % conf["job_type"])
             if not set(adapter.required.keys()) < set(conf.keys()):
-                # fixme:还没想好optional怎么处理, 先不管
                 # 必要的配置没有提供
-                return None
+                raise ConfigException("必要的配置没有提供!")
             valid_conf_name_set = set(adapter.required.keys()).union(set(adapter.optional.keys()))
             conf_obj = {key:value for key,value in conf.iteritems()
                         if key in valid_conf_name_set}
@@ -199,7 +205,7 @@ def init_db(app):
             except Exception as e:
                 db.session.rollback()
                 print e
-                return None
+                raise
             else:
             # 写入conf文件
                 new_job.job_conf = str(new_job.job_id) + '_conf.json'
@@ -215,7 +221,7 @@ def init_db(app):
                 except Exception as e:
                     db.session.rollback()
                     print e
-                    return None
+                    raise
                 return new_job
 
 
@@ -229,7 +235,7 @@ def init_db(app):
             # fixme: 错误处理是在这里做还是在外面catch这里要统一. 感觉在这里做比较较好. 那这样的话如果失败需要一个error_string.
             return json.load(open(self.abs_conf_file, 'r'))
 
-        def get_abs_data_file(self, data_file_path):
+        def get_abs_data_file_path(self, data_file_path):
             return os.path.join(User.get(self.user_id).get_user_dir(),
                                 data_file_path)
 
@@ -244,7 +250,7 @@ def init_db(app):
 
         @property
         def pid_file(self):
-            return os.path.join('/tmp/dan_web/', self.user_id, str(self.job_id)+ '.pid')
+            return os.path.join('/tmp/dan_web/', str(self.user_id), str(self.job_id)+ '.pid')
 
         @property
         def abs_log_file(self):

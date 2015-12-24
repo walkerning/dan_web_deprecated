@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, unicode_literals
+
 import os
+import sys
 import signal
 import time
 import subprocess
+import traceback # for test
 
-from dan_web.adapter.job_adapter import get_adapter
 from dan import load_command_packages
+from dan.common.utils import (init_logging, init_caffe_path,
+                              setup_glog_environ)
+
+from dan_web.model.share import convert_shared_path
+from dan_web.adapter.job_adapter import get_adapter
 from dan_web.job_runner.conf import END_LOG_TOKEN
-from dan_web.job_runner.error import RunnerException
+from dan_web.error import RunnerException
 from dan_web.job_runner.runner import JobRunnerDaemon
 
 
@@ -48,7 +56,7 @@ def kill_running_job(job, trys=5):
             with open(job.pid_file, 'r') as pf:
                 pid = int(pf.read().strip())
         except IOError:
-            print "No pid file, something goes wrong!"
+            print("No pid file, something goes wrong!")
             raise
         #if pid != job.running_pid:
         # fixme: 以后应该不需要runing_pid这个项
@@ -64,10 +72,9 @@ def kill_running_job(job, trys=5):
                 if os.path.exists(job.pid_file):
                     os.remove(job.pid_file)
             else:
-                print str(err)
+                print(str(err))
                 # fixme: just for test here
                 raise
-
 
 
 class JobRunner(object):
@@ -77,7 +84,7 @@ class JobRunner(object):
     def __init__(self, job, db):
         self._job = job
         self._db = db
-        self.job_adapter = get_adapter([('job_type', job.job_type)])
+        self.job_adapter = get_adapter([('job_type', job.job_type)])()
         for cmd_type, cmd_cls in load_command_packages():
             if cmd_type == job.job_type:
                 self.job_cls = cmd_cls
@@ -87,18 +94,40 @@ class JobRunner(object):
 
         # convert conf
         self.conf = self.job_adapter.convert_conf(job.get_conf(),
-                                                  addition_converter={'data_file':
-                                                                      job.get_abs_data_file})
+                                                  addition_converter={'input_file':
+                                                                      [job.get_abs_data_file_path, convert_shared_path],
+                                                                      'output_proto': job.get_abs_data_file_path,
+                                                                      'output_caffemodel': job.get_abs_data_file_path
+
+                                                                  })
         self.log_file = job.abs_log_file
-        self.runner = self.job_cls.load_from_config(self.conf)
-        self.pid_file = job.get_pid_file()
+        self.runner = self.job_cls.load_from_config(self.conf, hide_file_path=True)
+        self.pid_file = job.pid_file
+
+    def _set_end_status(self, runner):
+        self._job.set_end_status(runner.end_status)
+
+    def _init_logging_stderr(self, _):
+        init_logging()
+        # Make caffe log to stderr too!        
+        # And I don't think someone need caffe info logs
+        # seem on the website
+        setup_glog_environ(quiet=True, GLOG_logtostderr='1') 
 
     def run(self):
         """
         fork新进程开始运行, return新进程的pid"""
+        # log everything to stderr
+        job_runner = JobRunnerDaemon(self.runner, self.pid_file,
+                                     # stdout=self.log_file,
+                                     stderr=self.log_file,
+                                     #stderr=self.log_file, 
+                                     hooks={
+                                         "at-exit": self._set_end_status,
+                                         "pre-run": [self._init_logging_stderr,
+                                                     lambda _: init_caffe_path()]
 
-        job_runner = JobRunnerDaemon(self.runner, self.pid_file, self._job.set_end_status,
-                                     stdinout=self.log_file, stderr=self.log_file)
+                                     })
         self._job.job_status = "running"
         try:
             center_pid = job_runner.start()
@@ -110,8 +139,17 @@ class JobRunner(object):
             else:
                 raise Exception('这不应该出现...debug!')
 
-        except Exception:
+        except Exception as e:
+            print("Exception when start or waitpid, ", e)
+            try:
+                exc_info = sys.exc_info()
+
+            finally:
+                # Display the *original* exception
+                traceback.print_exception(*exc_info)
+                del exc_info
             self._job.job_status = "failed"
         # also need another try, except
         self._db.session.add(self._job)
         self._db.session.commit()
+

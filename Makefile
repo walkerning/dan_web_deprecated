@@ -6,6 +6,11 @@ runmyvps:
 
 ready:
 	@# 以后再来写自动部署, 包括依赖啥的
+	@# 其实不该写在这里...
+	mkdir -p dan_web/uploads/
+	mkdir -p dan_web/user_confs/
+	mkdir -p dan_web/user_logs/
+	mkdir -p /tmp/dan_web/
 
 my-test-model:
 	ipython -i test_model.py

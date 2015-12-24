@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import sys, os, atexit
 
 from dan_web.job_runner.conf import END_LOG_TOKEN
-from dan_web.job_runner.error import RunnerException
+from dan_web.error import RunnerException
 
 class JobRunnerDaemon(object):
-    def __init__(self, runner, pidfile, set_end_status, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-        super(JobRunnerDaemon, self).__init__(pidfile, stdin=stdin, stdout=stdout, stderr=stderr)
+    def __init__(self, runner, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null', hooks={}):
+        self.runner = runner # e... fuck...
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
-        self.set_end_status = set_end_status #fixme: 不一定行, 可能需要自己用model写数据库
+        self.hooks = hooks
         self.pidfile = pidfile
         self.end_status = False
 
@@ -29,6 +29,7 @@ class JobRunnerDaemon(object):
                 # exit first parent
                 return pid
         except OSError, e:
+            print("fork失败")
             raise RunnerException("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
 
         # decouple from parent environment
@@ -49,9 +50,9 @@ class JobRunnerDaemon(object):
         # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
-        si = file(self.stdin, 'r')
-        so = file(self.stdout, 'a+')
-        se = file(self.stderr, 'a+', 0)
+        si = open(self.stdin, 'r')
+        so = open(self.stdout, 'w', 1) # line buffered
+        se = file(self.stderr, 'w', 0) # not buffered
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
@@ -60,16 +61,29 @@ class JobRunnerDaemon(object):
         atexit.register(self.delpid)
         pid = str(os.getpid())
         open(self.pidfile,'w+').write("%s\n" % pid)
-        return False
+        return 0
 
+    def hook(self, hook_name):
+        hook_func =  self.hooks.get(hook_name, None)
+        if isinstance(hook_func, list):
+            for hook_f in hook_func:
+                if hook_f and callable(hook_f):
+                    hook_f(self)
+        else:
+            if hook_func and callable(hook_func):
+                hook_func(self)
+            
     def delpid(self):
+        # del pid file
         os.remove(self.pidfile)
-        ending_log = 'END: Job %s\n' % ('Job success' if self.end_status else 'Job failed') + END_LOG_TOKEN + '\n'
-
-        print(ending_log)
-        self.set_end_status(self.end_status)
-        # Job失败或者被终止
-        # fixme: 不太确定这样可不可以, 试一试
+        
+        # print the end log and the ending token
+        ending_log = '\n\n====== END: Job %s ======\n\n' % ('success' if self.end_status else 'failed') + \
+                     END_LOG_TOKEN + '\n'
+        
+        # all logging here will be using sys.stderr, do we need an option... maybe not
+        print(ending_log, file=sys.stderr)
+        self.hook("at-exit")
 
     def start(self):
         """
@@ -90,11 +104,28 @@ class JobRunnerDaemon(object):
         pid = self.daemonize()
         if pid and pid > 0:
             # in the parent process
-            return
+            return pid
         else:
             # in the daemonized subprocess
             self.run()
 
     def run(self):
+        """ Run Job in the sub process"""
+        self.hook("pre-run")
         self.end_status = self.runner.run()
+        self.hook("post-run")
+
+        # flush log file
+        sys.stdout.flush() # from library block buffer to os buffer
+        try:
+            os.fsync(sys.stdout.fileno()) # fsync to disk
+        except OSError:
+            pass
+        sys.stderr.flush()
+        try:
+            # cannot fsync a non-file, just check tty is not enough
+            os.fsync(sys.stderr.fileno())
+        except OSError:
+            pass
+
         sys.exit(0)
