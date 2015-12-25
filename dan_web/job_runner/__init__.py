@@ -141,6 +141,7 @@ class JobRunner(object):
                 exit_status = os.WEXITSTATUS(status)
                 if exit_status != 0:
                     self._job.job_status = "failed"
+                    return False
             else:
                 raise Exception('这不应该出现...debug!')
 
@@ -153,7 +154,9 @@ class JobRunner(object):
                 # Display the *original* exception
                 traceback.print_exception(*exc_info)
                 del exc_info
-            self._job.job_status = "failed"
-        # also need another try, except
+                self._job.job_status = "failed"
+                return False
+        # fixme: also need another try, except
         self._db.session.add(self._job)
         self._db.session.commit()
+        return True

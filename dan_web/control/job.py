@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import os
+import subprocess
 import json
 
 import flask as _f
@@ -15,7 +16,7 @@ from dan_web.adapter.job_adapter import  get_adapter
 from dan_web.adapter.secure import secure_conf
 from dan_web.adapter.formview_adapter import FormViewAdapter
 
-from dan_web.job_runner import JobRunner
+from dan_web.job_runner import JobRunner, kill_running_job
 
 from dan_web.error import ExpectedException
 
@@ -58,9 +59,15 @@ def job_create():
                                   now_active_tab="create-new-job",
                                   job_list=job_list)
     elif _f.request.method == "POST":
+        # fixme: 其实可以改成ajax的..
         # create a new job
-        print('hihihi') # for test
-        conf = _f.request.form['conf']
+        # use get!!! or 400 will be returned by Flask!!!
+        #conf = _f.request.form.get('conf', None)
+        conf = {name: value for name, value in _f.request.form.iteritems()}
+        # if conf is None:
+        #     _f.flash('Job新建失败: 新建请求不能被识别', 'danger')
+        #     return _f.redirect(_f.url_for('job.job_create'))
+
         # must secure user input a bit here
         job_type = conf.get('job_type', None)
         if not job_type:
@@ -85,20 +92,88 @@ def job_create():
             _f.flash('Job新建失败', 'danger')
             return _f.redirect(_f.url_for('job.job_create'))
         else:
-            # 新建子进程运行工具
-            try:
-                job_runner = JobRunner(new_job, db)
-            except ExpectedException as e:
-                # fixme: 有什么情况会导致新建成功但无法开始运行, 比如达到同时运行的job上限了?
-                # fixme: 那肯定需要一个按钮是run_job!
-                _f.flash('Job新建成功, 但无法开始运行: ' + repr(e), 'danger')
-                return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
-            # fixme: 这个run也在里面raise? 应该不用吧
-            job_runner.run() # run() method will create a new subprocess and run it
-            # fixme: 如果flash变得好看了, 考虑加flash提示...
+            _f.flash('Job新建成功', 'success')
             return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
 
-@job_blueprint.route('form/pre_ajax', methods=["POST"])
+@job_blueprint.route('ajax/job/run', methods=["POST"])
+@_l.login_required
+def job_run():
+    job_id = _f.request.form.get('job')
+    if job_id is None:
+        return fail_json(error_string="运行Job失败: 没有提供job id")
+    job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
+    if job is None:
+        return fail_json(error_string="运行Job失败: 不合法的Job运行请求")
+    # 检查job状态
+    if job.job_status == 'running':
+        # fixme: 如果出现at-exit没有执行的情况怎么办...
+        return fail_json(error_string="运行Job失败: 该Job已经在运行")
+    # 新建子进程运行工具
+    # try:
+    #     job_runner = JobRunner(job, db)
+    # except ExpectedException as e:
+    #     # fixme: 有什么情况会导致新建成功但无法开始运行, 比如达到同时运行的job上限了?
+    #     return fail_json(error_string='运行Job失败: ' + repr(e))
+    # except Exception as e:
+    #     print(e)
+    #     return fail_json(error_string='运行Job失败')
+    # fixme: 这个run也在里面raise? 应该不用吧
+    runner = subprocess.Popen(['python', os.path.join(app_root, 'run_job.py'), str(job.job_id)])
+    try:
+        _, status = os.waitpid(runner.pid, 0)
+        if os.WIFEXITED(status):
+            exit_status = os.WEXITSTATUS(status)
+            if exit_status != 0:
+                return fail_json(error_string="运行Job失败")
+    except Exception as e:
+        print(e)
+        raise
+    # status = job_runner.run() # run() method will create a new subprocess and run it
+    # a sub process forked from here will have context, and system.exit will be catch...
+    # so cannot exit from the second process
+    return success_json()
+
+@job_blueprint.route('ajax/job/delete', methods=["POST"])
+@_l.login_required
+def job_delete():
+    job_id = _f.request.form.get('job')
+    if job_id is None:
+        return fail_json(error_string="删除Job失败: 没有提供job id")
+    job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
+    if job is None:
+        return fail_json(error_string="删除Job失败: 不合法的Job删除请求")
+    # 检查job状态
+    if job.job_status == 'running':
+        return fail_json(error_string="删除Job失败: 该Job已经在运行, 请先中止")
+    try:
+        Job.delete_by_job_id(job_id)
+    except Exception as e:
+        print(e)
+        return fail_json(error_string='删除Job失败')
+    else:
+        return success_json()
+
+@job_blueprint.route('ajax/job/stop', methods=["POST"])
+@_l.login_required
+def job_stop():
+    job_id = _f.request.form.get('job')
+    if job_id is None:
+        return fail_json(error_string="中止Job失败: 没有提供job id")
+    job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
+    if job is None:
+        return fail_json(error_string="中止Job失败: 不合法的Job删除请求")
+    # 检查Job status
+    if not job.job_status == 'running':
+        return fail_json(error_string="中止Job失败: 该Job没有在运行")
+    try:
+        kill_running_job(job)
+    except Exception as e:
+        print(e)
+        return fail_json(error_string='中止Job失败: 尝试刷新或稍等')
+    else:
+        return success_json()
+
+@job_blueprint.route('ajax/form/pre_ajax', methods=["POST"])
 @_l.login_required
 def pre_ajax():
     """
@@ -121,7 +196,7 @@ def pre_ajax():
         # 以后如果要加更多还是放在adapter里, 其实还没有完全设计好...
         return fail_json()
 
-@job_blueprint.route('form/post_ajax', methods=["POST"])
+@job_blueprint.route('ajax/form/post_ajax', methods=["POST"])
 @_l.login_required
 def post_ajax():
     """

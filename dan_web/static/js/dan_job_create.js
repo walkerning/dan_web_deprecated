@@ -10,8 +10,35 @@
     });
   }
 
-  function is_required(obj) {
+  function is_required (obj) {
     return obj.closest('div').hasClass('required');
+  }
+
+  function post_create_job (event) {
+    event.preventDefault();
+    // create a hidden form
+    var form = $("<form>").attr({
+      method: 'POST',
+      action: CREATE_JOB_URL
+    }).css({
+      display: 'none'
+    });
+
+    // add all non-empty configs
+    $(".form-control, .form-control1").each(function (index) {
+      var name = $(this).attr('name');
+      var value = $(this).val();
+      if (value) {
+        form.append($("<input>").attr({
+          type: 'hidden',
+          name: name,
+          value: value
+        }));
+      }
+    });
+
+    // submit the form
+    form.appendTo('body').submit();
   }
 
   function bind_event_listeners (prepend_selector, append_selector) {
@@ -107,8 +134,8 @@
             bind_event_listeners("div.form-group[create_by='" + this_name + "'] ");
             // bind remove listener
             bind_remove_listeners($this);
-	    // set required property
-	    $("div.required > .form-control, .form-control1").prop('required', true);
+            // set required property
+            $("div.required > .form-control, .form-control1").prop('required', true);
           }
           else {
             swal("获取新表单失败, 请重新刷新", response.error_string);
@@ -122,5 +149,6 @@
   $(document).ready(function(){
     bind_event_listeners();
     $("div.required > .form-control, .form-control1").prop('required', true);
+    $("#upload_form").submit(post_create_job);
   });
 }(jQuery);

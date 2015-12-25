@@ -70,8 +70,6 @@ class Adapter_svd_tool(Tool):
                                  self).convert_conf(conf_dict,
                                                     now_package=__package__,
                                                     addition_converter=addition_converter)
-        import pdb
-        pdb.set_trace()
         # tool-specific adapting
         layer_string = super_converted['layer_name'] + ',' + super_converted['layer_method']
         layer_arg = super_converted.get('layer_arg', '')

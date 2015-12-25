@@ -1,9 +1,10 @@
 !function ($) {
 
   $(document).ready(function () {
-    var $delete_job_btn = $('button#delete_job');
-    var $stop_job_btn = $('button#stop_job');
-    var $log_job_btn = $('button#log_job');
+    var $delete_job_btn = $('button#delete_job_btn');
+    var $run_job_btn = $('button#run_job_btn');
+    var $stop_job_btn = $('button#stop_job_btn');
+    var $log_job_btn = $('button#log_job_btn');
     var $log_terminal = $('div.log_terminal');
 
     function p_generate(log) {
@@ -42,6 +43,43 @@
 
     }
 
+    function ajax_post_job_operation (post_url, success_info, callback) {
+      return function () {
+        $.ajax({
+          url: post_url,
+          method: 'POST',
+          data: {
+            job: current_job_id
+          },
+          success: function (res) {
+            if (res.status == "success") {
+              if (success_info) {
+                displayString(success_info);
+              }
+              if (callback) {
+                callback();
+              }
+            }
+            else {
+              displayError(res.error_string);
+            }
+          }
+        });
+      };
+    }
+
+    function displayError (error_string) {
+      $("#status_string").css('color', '#690F0D').text(error_string);
+    }
+    function displayString (string) {
+      $("#status_string").css('color', 'green').text(string);
+    }
+
     $log_job_btn.click(get_realtime_log);
+    $run_job_btn.click(ajax_post_job_operation(RUN_JOB_URL, "运行Job成功, 请刷新页面"));
+    $delete_job_btn.click(ajax_post_job_operation(DELETE_JOB_URL, '', function () {
+      window.location.replace(window.location.host);
+    }));
+    $stop_job_btn.click(ajax_post_job_operation(STOP_JOB_URL, "中止Job成功, 请刷新页面"));
   });
 }(jQuery);

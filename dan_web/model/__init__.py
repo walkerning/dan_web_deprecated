@@ -109,7 +109,7 @@ def init_db(app):
             relative_dir_path = os.path.join(app.config['USER_CONF_DIR'], str(self.user_id))
             user_conf_dir_path = os.path.join(approot, relative_dir_path)
             return user_conf_dir_path
-        
+
         def get_user_dir(self, dir_name=""):
             relative_dir_path = os.path.join(app.config['UPLOAD_DIR'], str(self.user_id))
             user_dir_path = os.path.join(approot, relative_dir_path)
@@ -168,7 +168,7 @@ def init_db(app):
         active = db.Column(db.BOOLEAN, db.ColumnDefault(True))
         create_time = db.Column(db.DATETIME, db.ColumnDefault(datetime.datetime.utcnow()))
         end_time = db.Column(db.DATETIME)
-        #running_pid = db.Column(db.Integer)
+        #running_pid = db.Column(db.Integer) # instead, using pid file now
         user_id = db.Column('user_id', db.Integer, db.ForeignKey('USER.user_id'), nullable=False)
 
         def __init__(self, user_id, job_name, job_type):
@@ -272,7 +272,10 @@ def init_db(app):
 
         @classmethod
         def get_job_of_user_id(cls, job_id, user_id):
-            job = cls.get(job_id)
+            try:
+                job = cls.get(job_id) # in case job_id is not int (user is evil)
+            except Exception:
+                return None
             if job.user_id == user_id:
                 return job
             else:
