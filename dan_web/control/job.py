@@ -59,6 +59,7 @@ def job_create():
                                   job_list=job_list)
     elif _f.request.method == "POST":
         # create a new job
+        print('hihihi') # for test
         conf = _f.request.form['conf']
         # must secure user input a bit here
         job_type = conf.get('job_type', None)

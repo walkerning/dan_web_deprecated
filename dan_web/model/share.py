@@ -9,7 +9,7 @@ def get_shared_file_name_list(glob_pattern):
     if shared_path is None:
         raise DanWebError('环境变量DAN_WEB_SHARED_DATA_PATH没有设置')
     else:
-        return glob.glob(os.path.join(shared_path, glob_pattern))
+        return [path.rsplit('/', 1)[-1] for path in glob.glob(os.path.join(shared_path, glob_pattern))]
 
 def convert_shared_path(path):
     path_list = path.rsplit('/', 2)

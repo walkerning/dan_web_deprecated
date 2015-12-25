@@ -10,8 +10,7 @@ import subprocess
 import traceback # for test
 
 from dan import load_command_packages
-from dan.common.utils import (init_logging, init_caffe_path,
-                              setup_glog_environ)
+from dan.common.utils import init_logging, setup_glog_environ
 
 from dan_web.model.share import convert_shared_path
 from dan_web.adapter.job_adapter import get_adapter
@@ -109,10 +108,16 @@ class JobRunner(object):
 
     def _init_logging_stderr(self, _):
         init_logging()
-        # Make caffe log to stderr too!        
+        # Make caffe log to stderr too!
         # And I don't think someone need caffe info logs
         # seem on the website
-        setup_glog_environ(quiet=True, GLOG_logtostderr='1') 
+        setup_glog_environ(quiet=True, GLOG_logtostderr='1')
+
+    def _init_pycaffe_path(self, _):
+        # init pycaffe path for Python search path
+        pycaffe_path = os.environ.get('DAN_WEB_PYCAFFE_PATH', None)
+        if pycaffe_path is not None:
+            sys.path.insert(0, pycaffe_path)
 
     def run(self):
         """
@@ -121,11 +126,11 @@ class JobRunner(object):
         job_runner = JobRunnerDaemon(self.runner, self.pid_file,
                                      # stdout=self.log_file,
                                      stderr=self.log_file,
-                                     #stderr=self.log_file, 
+                                     #stderr=self.log_file,
                                      hooks={
                                          "at-exit": self._set_end_status,
                                          "pre-run": [self._init_logging_stderr,
-                                                     lambda _: init_caffe_path()]
+                                                     self._init_pycaffe_path]
 
                                      })
         self._job.job_status = "running"
@@ -152,4 +157,3 @@ class JobRunner(object):
         # also need another try, except
         self._db.session.add(self._job)
         self._db.session.commit()
-

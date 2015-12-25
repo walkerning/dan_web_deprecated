@@ -12,7 +12,8 @@
 <div class="row" style="margin-bottom: 30px">
   <div class="col-lg-8 col-lg-offset-2">
     <div class="row">
-      <form enctype="multipart/form-data" id="upload_form" class="form-horizontal">
+      <form enctype="multipart/form-data" id="upload_form" class="form-horizontal"
+            action="{{ url_for('job.job_create') }}" method="POST">
         <div class="form-group" name="job_name">
           <div class="col-lg-4">
             <label for="form_arg_job_name" class="control-label">Job名字</label>
@@ -34,7 +35,7 @@
 
         </div>
         <div class="col-lg-offset-5">
-          <button type="submit"  style="margin-top: 20px;" class="btn btn-default" id="file_upload_btn">创建并运行</button>
+          <button type="submit"  style="margin-top: 20px;" class="btn btn-default" id="create_job_btn">创建Job</button>
         </div>
       </form>
     </div>

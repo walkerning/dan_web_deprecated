@@ -1,4 +1,3 @@
-debug_item = null;
 !function($) {
   function option_generate(name) {
     return '<option value="' + name + '">' + name + '</option>';
@@ -9,6 +8,10 @@ debug_item = null;
     creator.on("remove", function() {
       $(".form-group[create_by='" + creator_name + "']").remove();
     });
+  }
+
+  function is_required(obj) {
+    return obj.closest('div').hasClass('required');
   }
 
   function bind_event_listeners (prepend_selector, append_selector) {
@@ -104,6 +107,8 @@ debug_item = null;
             bind_event_listeners("div.form-group[create_by='" + this_name + "'] ");
             // bind remove listener
             bind_remove_listeners($this);
+	    // set required property
+	    $("div.required > .form-control, .form-control1").prop('required', true);
           }
           else {
             swal("获取新表单失败, 请重新刷新", response.error_string);
@@ -113,8 +118,9 @@ debug_item = null;
 
     });
   }
+
   $(document).ready(function(){
     bind_event_listeners();
-
+    $("div.required > .form-control, .form-control1").prop('required', true);
   });
 }(jQuery);
