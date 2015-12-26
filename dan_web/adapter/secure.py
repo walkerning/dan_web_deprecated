@@ -33,7 +33,7 @@ def _secure_input_file(input_file):
     if input_path_list[0] not in ("shared", "upload_prototxt", "upload_caffemodel",
                                   "generated_prototxt", "generated_caffemodel") or \
                                   len (input_path_list) == 1:
-        raise ConfigException("不合法的输入路径: %s"%input_file)
+        raise ConfigException(u"不合法的输入路径: %s"%input_file)
     else:
         file_name = secure_filename(input_path_list[-1])
         return os.path.join(input_path_list[0], file_name)

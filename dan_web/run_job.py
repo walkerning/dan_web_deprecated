@@ -11,7 +11,7 @@ from dan_web.model import (db, User, Job)
 from dan_web.job_runner import JobRunner
 
 os.environ['DAN_WEB_SHARED_DATA_PATH'] = app.config['WRITE_TO_ENV']['DAN_WEB_SHARED_DATA_PATH']
-
+os.environ['DAN_WEB_PYCAFFE_PATH'] = app.config['WRITE_TO_ENV']['DAN_WEB_PYCAFFE_PATH']
 #Default maximum for the number of available file descriptors.
 MAXFD = 1024
 
@@ -25,7 +25,8 @@ if (maxfd == resource.RLIM_INFINITY):
 for fd in range(3, maxfd):
     # 不能关闭标准输入输出对应的fd, 因为runner里要用到0,1,2三个file descriptor
     try:
-        os.close(fd)
+        #os.close(fd)
+        os.fdopen(fd).close()
     except OSError:# ERROR, fd wasn't open to begin with (ignored)
         pass
 try:
@@ -36,6 +37,7 @@ try:
         sys.exit(0)
     else:
         sys.exit(1)
-except Exception:
+except Exception as e:
+    print e
     sys.exit(1)
 

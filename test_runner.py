@@ -21,6 +21,7 @@ a_conf = {
 from dan_web.job_runner import JobRunner
 
 os.environ['DAN_WEB_SHARED_DATA_PATH'] = app.config['WRITE_TO_ENV']['DAN_WEB_SHARED_DATA_PATH']
+os.environ['DAN_WEB_PYCAFFE_PATH'] = app.config['WRITE_TO_ENV']['DAN_WEB_PYCAFFE_PATH']
 job = Job.get(5)
 runner = JobRunner(job,db)
 runner.run()

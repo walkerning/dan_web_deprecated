@@ -182,14 +182,14 @@ def pre_ajax():
     name = _f.request.form['name']
     if name == 'input_proto':
         # 找出所有的prototxt, 还可以给用户提供几个软链接到通用的VGG,.把下载/删除那个软链接的按钮给关掉, 并且下载的处理函数检查一下
-        input_proto_list = ['upload/' + x for x in _l.current_user.get_file_name_list('upload_prototxt')]
-        input_proto_list += ['generated/' + x for x in _l.current_user.get_file_name_list('generated_prototxt')]
+        input_proto_list = ['upload_prototxt/' + x for x in _l.current_user.get_file_name_list('upload_prototxt')]
+        input_proto_list += ['generated_prototxt/' + x for x in _l.current_user.get_file_name_list('generated_prototxt')]
         input_proto_list += ['shared/' + x for x in get_shared_file_name_list('*.prototxt')]
         return success_json(data=input_proto_list)
     elif name == 'input_caffemodel':
         # 找出所有的prototxt
-        input_caffemodel_list = ['upload/' + x for x in _l.current_user.get_file_name_list('upload_caffemodel')]
-        input_caffemodel_list += ['generated/' + x for x in _l.current_user.get_file_name_list('generated_caffemodel')]
+        input_caffemodel_list = ['upload_caffemodel/' + x for x in _l.current_user.get_file_name_list('upload_caffemodel')]
+        input_caffemodel_list += ['generated_caffemodel/' + x for x in _l.current_user.get_file_name_list('generated_caffemodel')]
         input_caffemodel_list += ['shared/' + x for x in get_shared_file_name_list('*.caffemodel')]
         return success_json(data=input_caffemodel_list)
     else:

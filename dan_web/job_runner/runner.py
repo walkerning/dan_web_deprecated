@@ -2,7 +2,7 @@
 
 from __future__ import print_function, unicode_literals
 
-import sys, os, atexit
+import sys, os, atexit, signal
 
 from dan_web.job_runner.conf import END_LOG_TOKEN
 from dan_web.error import RunnerException
@@ -57,10 +57,15 @@ class JobRunnerDaemon(object):
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
 
-        # write pidfile
+        # register atexit handler
         atexit.register(self.delpid)
+        # remember to register SIGTERM handler for this daemon
+        signal.signal(signal.SIGTERM, lambda signum, _: self.delpid())
+
+        # write pidfile
         pid = str(os.getpid())
         open(self.pidfile,'w+').write("%s\n" % pid)
+        
         return 0
 
     def hook(self, hook_name):
@@ -112,7 +117,12 @@ class JobRunnerDaemon(object):
     def run(self):
         """ Run Job in the sub process"""
         self.hook("pre-run")
-        self.end_status = self.runner.run()
+        try:
+            self.end_status = self.runner.run()
+        except Exception as e:
+            print("%s: %s" % (e.__class__.__name__, e), file=sys.stderr) # not print traceback
+        except BaseException as e:
+            print("base exception: %s: %s" % (e.__class__.__name__, e), file=sys.stderr) # not print traceback
         self.hook("post-run")
 
         # flush log file

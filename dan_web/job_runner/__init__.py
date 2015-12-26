@@ -15,7 +15,7 @@ from dan.common.utils import init_logging, setup_glog_environ
 from dan_web.model.share import convert_shared_path
 from dan_web.adapter.job_adapter import get_adapter
 from dan_web.job_runner.conf import END_LOG_TOKEN
-from dan_web.error import RunnerException
+from dan_web.error import RunnerException, ExpectedException
 from dan_web.job_runner.runner import JobRunnerDaemon
 
 
@@ -57,8 +57,6 @@ def kill_running_job(job, trys=5):
         except IOError:
             print("No pid file, something goes wrong!")
             raise
-        #if pid != job.running_pid:
-        # fixme: 以后应该不需要runing_pid这个项
         try_time = 0
         try:
             while try_time < trys:
@@ -68,13 +66,21 @@ def kill_running_job(job, trys=5):
         except OSError, err:
             err = str(err)
             if err.find("No such process") > 0:
-                if os.path.exists(job.pid_file):
-                    os.remove(job.pid_file)
+                #if os.path.exists(job.pid_file):
+                #    os.remove(job.pid_file)
+                pass
             else:
                 print(str(err))
                 # fixme: just for test here
                 raise
+        print("caonima")
+        # fixme: 还是没有杀死怎么办
+        if _is_pid_running(pid):
+            print("没有杀死") # fortest
+            raise ExpectedException('尝试了%d次, 不能杀死该进程' % trys)
 
+def _is_pid_running(pid):
+    return str(pid) in [_pid for _pid in os.listdir('/proc') if _pid.isdigit()]
 
 class JobRunner(object):
     """
