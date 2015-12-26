@@ -7,7 +7,8 @@ import json
 import flask as _f
 from flask.ext import login as _l
 
-from dan_web.helper import success_json, fail_json
+from dan_web.helper import (success_json, fail_json,
+                            success_redirect, fail_redirect)
 from dan_web.model import (User, Job, db)
 from dan_web.model.share import get_shared_file_name_list
 from dan_web.view_conf import ViewConfer
@@ -71,8 +72,7 @@ def job_create():
         # must secure user input a bit here
         job_type = conf.get('job_type', None)
         if not job_type:
-            _f.flash('Job新建失败: 没有指定Job类型', 'danger')
-            return _f.redirect(_f.url_for('job.job_create'))
+            return fail_redirect(_f.url_for('job.job_create'), 'Job新建失败: 没有指定Job类型')
         try:
             # fixme: 这个感觉在job里做更好, secure_conf里就可以不用重新update了
             conf = secure_conf(job_type, conf)
@@ -83,17 +83,17 @@ def job_create():
             new_job = Job.create_job(_l.current_user.user_id, conf)
         except ExpectedException as e:
             # 超过了job限制, 配置不完全(客户端也会检验)
-            _f.flash('Job新建失败: %s' % e, 'danger')
-            return _f.redirect(_f.url_for('job.job_create'))
+            return fail_redirect(_f.url_for('job.job_create'),
+                                 'Job新建失败: %s' % e)
         except Exception as e:
             # Internal Error, may be a bug, log to log file
             # fixme: add traceback here
             print(e)
-            _f.flash('Job新建失败', 'danger')
-            return _f.redirect(_f.url_for('job.job_create'))
+            return fail_redirect(_f.url_for('job.job_create'),
+                                 'Job新建失败')
         else:
-            _f.flash('Job新建成功', 'success')
-            return _f.redirect(_f.url_for('job.job_item', job_id=new_job.job_id))
+            return success_redirect(_f.url_for('job.job_item', job_id=new_job.job_id),
+                                    'Job新建成功')
 
 @job_blueprint.route('ajax/job/run', methods=["POST"])
 @_l.login_required
@@ -118,7 +118,8 @@ def job_run():
     #     print(e)
     #     return fail_json(error_string='运行Job失败')
     # fixme: 这个run也在里面raise? 应该不用吧
-    runner = subprocess.Popen(['python', os.path.join(app_root, 'run_job.py'), str(job.job_id)])
+
+    runner = subprocess.Popen(['python', os.path.join(app_root, 'run_job.py'), str(job.job_id)], close_fds=True) # close_fds argument is supposed to be enough
     try:
         _, status = os.waitpid(runner.pid, 0)
         if os.WIFEXITED(status):
@@ -133,25 +134,27 @@ def job_run():
     # so cannot exit from the second process
     return success_json()
 
-@job_blueprint.route('ajax/job/delete', methods=["POST"])
+@job_blueprint.route('job/delete', methods=["POST"])
 @_l.login_required
 def job_delete():
     job_id = _f.request.form.get('job')
     if job_id is None:
-        return fail_json(error_string="删除Job失败: 没有提供job id")
+        return fail_redirect(_f.url_for('index'), "删除Job失败: 没有提供job id")
     job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
     if job is None:
-        return fail_json(error_string="删除Job失败: 不合法的Job删除请求")
+        return fail_redirect(_f.url_for('index', "删除Job失败: 不合法的Job删除请求"))
     # 检查job状态
     if job.job_status == 'running':
-        return fail_json(error_string="删除Job失败: 该Job已经在运行, 请先中止")
+        return fail_redirect(_f.url_for('job.job_item', job_id=job.job_id),
+                             "删除Job失败: 该Job已经在运行, 请先中止")
     try:
         Job.delete_by_job_id(job_id)
     except Exception as e:
         print(e)
-        return fail_json(error_string='删除Job失败')
+        return fail_redirect(_f.url_for('job.job_item', job_id=job.job_id),
+                             '删除Job失败')
     else:
-        return success_json()
+        return success_redirect(_f.url_for('index'), '删除Job成功')
 
 @job_blueprint.route('ajax/job/stop', methods=["POST"])
 @_l.login_required

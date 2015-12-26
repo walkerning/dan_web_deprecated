@@ -276,6 +276,8 @@ def init_db(app):
                 job = cls.get(job_id) # in case job_id is not int (user is evil)
             except Exception:
                 return None
+            if job is None:
+                return None
             if job.user_id == user_id:
                 return job
             else:

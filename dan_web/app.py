@@ -16,7 +16,7 @@ from dan_web.control import upload as _u
 from dan_web.helper import success_json, fail_json
 from dan_web.model import init_db
 
-from dan_web.job_runner import read_log_and_send
+from dan_web.job_runner import read_log_and_send, read_log_and_send_realtime
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,10 +77,10 @@ def realtime_log(ws):
                     ws.send("Error: 该Job还没有生成Log文件")
                 elif job.job_status != 'running':
                     # logfile is not changing, just return the content
-                    for message in iter(open(log_file, 'r').readline, ''):
-                        ws.send(message)
-                else:
                     read_log_and_send(ws, log_file)
+                else:
+                    # logfile may be changing, tail it
+                    read_log_and_send_realtime(ws, log_file)
 
 
 

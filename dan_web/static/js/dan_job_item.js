@@ -7,6 +7,28 @@
     var $log_job_btn = $('button#log_job_btn');
     var $log_terminal = $('div.log_terminal');
 
+    function _post(url, method, data) {
+      var form = $("<form>").attr({
+        method: method,
+        action: url
+      }).css({
+        display: 'none'
+      });
+
+      // add all data
+      for (var name in data) {
+        form.append($("<input>").attr({
+          type: 'hidden',
+          name: name,
+          value: data[name]
+        }));
+      }
+
+      // submit the form
+      form.appendTo('body').submit();
+
+    }
+
     function p_generate(log) {
       return '<p class="log_text">' + log + '</p>';
     }
@@ -45,6 +67,7 @@
 
     function ajax_post_job_operation (post_url, success_info, callback) {
       return function () {
+	$(this).addClass('disabled');
         $.ajax({
           url: post_url,
           method: 'POST',
@@ -52,6 +75,7 @@
             job: current_job_id
           },
           success: function (res) {
+	    $(this).removeClass("disabled");
             if (res.status == "success") {
               if (success_info) {
                 displayString(success_info);
@@ -75,11 +99,12 @@
       $("#status_string").css('color', 'green').text(string);
     }
 
+    // fixme: maybe all use non-ajax post here!
     $log_job_btn.click(get_realtime_log);
     $run_job_btn.click(ajax_post_job_operation(RUN_JOB_URL, "运行Job成功, 请刷新页面"));
-    $delete_job_btn.click(ajax_post_job_operation(DELETE_JOB_URL, '', function () {
-      window.location.replace(window.location.host);
-    }));
+    $delete_job_btn.click(function () {
+      _post(DELETE_JOB_URL, 'POST', {'job': current_job_id});
+    });
     $stop_job_btn.click(ajax_post_job_operation(STOP_JOB_URL, "中止Job成功, 请刷新页面"));
   });
 }(jQuery);

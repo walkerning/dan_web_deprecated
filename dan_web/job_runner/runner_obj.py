@@ -2,7 +2,7 @@
 
 from __future__ import print_function, unicode_literals
 
-import sys, os, atexit, signal, subprocess
+import sys, os, atexit, signal
 
 from dan_web.job_runner.conf import END_LOG_TOKEN
 from dan_web.error import RunnerException
@@ -61,6 +61,10 @@ class JobRunnerDaemon(object):
         atexit.register(self.delpid)
         # remember to register SIGTERM handler for this daemon
         signal.signal(signal.SIGTERM, lambda signum, _: self.delpid())
+
+        # write pidfile
+        pid = str(os.getpid())
+        open(self.pidfile,'w+').write("%s\n" % pid)
         
         return 0
 
@@ -76,11 +80,7 @@ class JobRunnerDaemon(object):
             
     def delpid(self):
         # del pid file
-        try:
-            os.remove(self.pidfile)
-        except Exception:
-            raise # for test
-            pass
+        os.remove(self.pidfile)
         
         # print the end log and the ending token
         ending_log = '\n\n====== END: Job %s ======\n\n' % ('success' if self.end_status else 'failed') + \
@@ -118,30 +118,11 @@ class JobRunnerDaemon(object):
         """ Run Job in the sub process"""
         self.hook("pre-run")
         try:
-            #self.end_status = self.runner.run()
-            # 尝试用命令行跑
-            _runner_proc = subprocess.Popen(self.runner)
+            self.end_status = self.runner.run()
         except Exception as e:
             print("%s: %s" % (e.__class__.__name__, e), file=sys.stderr) # not print traceback
-            sys.exit(1)
         except BaseException as e:
             print("base exception: %s: %s" % (e.__class__.__name__, e), file=sys.stderr) # not print traceback
-            sys.exit(1)
-        else:
-            _runner_pid = _runner_proc.pid
-            # write pidfile
-            open(self.pidfile,'w+').write("%s\n" % _runner_pid)
-            # waitpid
-            try:
-                _, status = os.waitpid(_runner_pid, 0)
-                if os.WIFEXITED(status):
-                    exit_status = os.WEXITSTATUS(status)
-                    if exit_status != 0:
-                        self.end_status = False
-                    else:
-                        self.end_status = True
-            except Exception as e:
-                print("exception when waitpid for runner: ", e, file=sys.stderr)
         self.hook("post-run")
 
         # flush log file
