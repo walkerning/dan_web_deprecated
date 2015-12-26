@@ -3,7 +3,6 @@
 将新建Job的config进行securing"""
 
 import os
-import copy
 
 from werkzeug import secure_filename
 
@@ -14,7 +13,6 @@ def secure_conf(job_type, conf_dict):
     job_adapter = get_adapter([('job_type', job_type)])
     if job_adapter is None:
         raise ConfigException("Wrong job type: %s" % job_type)
-    conf_dict = copy.deepcopy(conf_dict)
     job_adapter = job_adapter()
     conf = Tool.convert_conf(job_adapter, conf_dict,
                              addition_converter={
@@ -25,8 +23,8 @@ def secure_conf(job_type, conf_dict):
                              },
                              # very bugging now_package... really need fix
                              now_package='dan_web.adapter.job_type')
-    conf_dict.update(conf)
-    return conf_dict
+
+    return conf
 
 def _secure_input_file(input_file):
     input_path_list = input_file.strip().split('/', 1)

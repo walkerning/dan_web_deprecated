@@ -40,7 +40,7 @@ def read_log_and_send_realtime(ws, log_file):
     # Open subprocess in a long-time connection is fine.
     # Open the subprocess as soon as possible to avoid lose log.
     p = subprocess.Popen(['tail', '-n', '0', '-F', log_file], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+                         stderr=subprocess.STDOUT, close_fds=True) # remember to close fds
 
     # must strip to get the last log
     now_message_list = now_message.strip('\n').split('\n')

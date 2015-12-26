@@ -10,6 +10,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
 from dan_web.helper import chdir
 from dan_web.adapter.job_adapter import get_adapter
+from dan_web.adapter.secure import secure_conf
 from dan_web.error import ConfigException
 
 approot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -185,17 +186,20 @@ def init_db(app):
                 # 必要的配置没有提供
                 # 这里还是改成raise的接口吧...
                 raise ConfigException("没有提供Job name或Job type")
-            adapter =  get_adapter([('job_type', conf["job_type"])])
 
-            if adapter is None:
-                # 无效的job_type
-                raise ConfigException("无效的Job type: %s" % conf["job_type"])
-            if not set(adapter.required.keys()) < set(conf.keys()):
-                # 必要的配置没有提供
-                raise ConfigException("必要的配置没有提供!")
-            valid_conf_name_set = set(adapter.required.keys()).union(set(adapter.optional.keys()))
-            conf_obj = {key:value for key,value in conf.iteritems()
-                        if key in valid_conf_name_set}
+            # could raise Config/AdapterException
+            conf_obj = secure_conf(conf["job_type"], conf) 
+
+            # adapter =  get_adapter([('job_type', conf["job_type"])])
+            # if adapter is None:
+            #     # 无效的job_type
+            #     raise ConfigException("无效的Job type: %s" % conf["job_type"])
+            # if not set(adapter.required.keys()) < set(conf.keys()):
+            #     # 必要的配置没有提供
+            #     raise ConfigException("必要的配置没有提供!")
+            # valid_conf_name_set = set(adapter.required.keys()).union(set(adapter.optional.keys()))
+            # conf_obj = {key:value for key,value in conf.iteritems()
+            #             if key in valid_conf_name_set}
 
             # fixme: 没给job_conf加随机数, 因为job_id暂时是唯一的
             new_job = cls(user_id, conf["job_name"], conf["job_type"])

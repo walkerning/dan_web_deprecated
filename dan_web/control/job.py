@@ -73,12 +73,7 @@ def job_create():
         job_type = conf.get('job_type', None)
         if not job_type:
             return fail_redirect(_f.url_for('job.job_create'), 'Job新建失败: 没有指定Job类型')
-        try:
-            # fixme: 这个感觉在job里做更好, secure_conf里就可以不用重新update了
-            conf = secure_conf(job_type, conf)
-        except Exception:
-            # fixme: 先raiseprint()
-            raise
+        
         try:
             new_job = Job.create_job(_l.current_user.user_id, conf)
         except ExpectedException as e:
