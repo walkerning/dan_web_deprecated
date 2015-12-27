@@ -27,6 +27,11 @@ app.config.from_pyfile(os.path.join(here, 'app_conf.py'))
 for env_name, env_value in app.config.get('WRITE_TO_ENV', {}).iteritems():
     os.environ[env_name] = env_value
 
+try:
+    os.mkdir(app.config['WRITE_TO_ENV']['DAN_WEB_TMP_DIR'])
+except Exception:
+    pass
+
 app.debug = True #just for debug
 
 # init database

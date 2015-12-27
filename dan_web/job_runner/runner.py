@@ -79,7 +79,7 @@ class JobRunnerDaemon(object):
         try:
             os.remove(self.pidfile)
         except Exception:
-            raise # for test
+            #raise # for test
             pass
         
         # print the end log and the ending token

@@ -116,9 +116,6 @@ def init_db(app):
             user_dir_path = os.path.join(approot, relative_dir_path)
             return os.path.join(user_dir_path, dir_name)
 
-        def get_user_tmp_dir(self, dir_name=""):
-            return os.path.join('/tmp/dan_web/', str(self.user_id))
-
         def delete_user_file(self, dir_name, file_name):
             # fixme: 是否需要更严格的检查, 外面已经检查过了, 但是这里是不是最好也检查一遍
             os.remove(os.path.join(self.get_user_dir(), dir_name, file_name))
@@ -127,14 +124,13 @@ def init_db(app):
             user_dir_path = self.get_user_dir()
             user_conf_dir_path = self.get_user_conf_dir()
             user_log_dir_path = self.get_user_log_dir()
-            user_tmp_dir_path = self.get_user_tmp_dir()
 
             # shutil.rmtree(user_dir_path, ignore_errors=True)
             # fixme: 怎么把它们弄成一个配置文件, 只能装到working set吗
             os.mkdir(user_dir_path)
             os.mkdir(user_conf_dir_path)
             os.mkdir(user_log_dir_path)
-            os.mkdir(user_tmp_dir_path)
+
             # for test
             with chdir(user_dir_path):
                 for _dir in ['upload_prototxt', 'upload_caffemodel',
@@ -254,7 +250,8 @@ def init_db(app):
 
         @property
         def pid_file(self):
-            return os.path.join('/tmp/dan_web/', str(self.user_id), str(self.job_id)+ '.pid')
+            dan_web_run_dir = os.environ.get('DAN_WEB_RUN_DIR', '/var/run/dan_web/')
+            return os.path.join(dan_web_run_dir, '%s_%s.pid' % (str(self.user_id), str(self.job_id)+ '.pid'))
 
         @property
         def abs_log_file(self):

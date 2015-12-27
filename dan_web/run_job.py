@@ -12,9 +12,8 @@ from dan_web.model import (db, User, Job)
 from dan_web.job_runner import JobRunner
 
 # 在这里设置环境变量, 因为有时候也会作为独立脚本运行, 不使用subprocess.Popen指定env的方式
-os.environ['DAN_WEB_SHARED_DATA_PATH'] = app.config['WRITE_TO_ENV']['DAN_WEB_SHARED_DATA_PATH']
-os.environ['DAN_WEB_PYCAFFE_PATH'] = app.config['WRITE_TO_ENV']['DAN_WEB_PYCAFFE_PATH']
-
+for env_name, env_value in app.config.get('WRITE_TO_ENV', {}).iteritems():
+    os.environ[env_name] = env_value
 
 # Default maximum for the number of available file descriptors.
 # MAXFD = 1024

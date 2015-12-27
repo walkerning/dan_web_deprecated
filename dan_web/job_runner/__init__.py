@@ -86,7 +86,6 @@ def kill_running_job(job, trys=5):
                 print(str(err))
                 # fixme: just for test here
                 raise
-        print("caonima")
         # fixme: 还是没有杀死怎么办
         if _is_pid_running(pid):
             print("没有杀死") # fortest
@@ -98,7 +97,10 @@ def _is_pid_running(pid):
 class JobRunner(object):
     """
     The Job Runner! Core function of this website!"""
+    TMP_CONF_DIR = '/tmp/dan_web/tmp_conf'
     def _get_tmp_conf_file(self, job):
+        if not os.path.isdir(self.TMP_CONF_DIR):
+            os.mkdir(self.TMP_CONF_DIR)
         return '/tmp/dan_web/tmp_conf/%d_%d.tmp.conf' % (job.user_id, job.job_id)
 
     def __init__(self, job, db):

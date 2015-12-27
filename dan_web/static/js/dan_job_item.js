@@ -41,7 +41,7 @@
     function get_realtime_log() {
       // 浏览器直接用websocket连接
       var ws = new WebSocket("ws://" + location.host + REALTIME_LOG_URL);
-      $log_job_btn.addClass("disabled");
+      $log_job_btn.prop("disabled", true);
       $log_terminal.children().remove();
       ws.onmessage = function(res) {
         $log_terminal.append(p_generate(res.data));
@@ -49,12 +49,12 @@
       };
       ws.onerror = function(res) {
         $log_terminal.append(p_generate("连接中断"));
-        $log_job_btn.removeClass("disabled");
+        $log_job_btn.prop("disabled", false);
         scroll_terminal();
       };
       ws.onclose = function(res) {
         $log_terminal.append(p_generate("------ END LOG ------"));
-        $log_job_btn.removeClass("disabled");
+        $log_job_btn.prop("disabled", false);
         scroll_terminal();
       };
       ws.onopen = function () {
@@ -67,7 +67,7 @@
 
     function ajax_post_job_operation (post_url, success_info, callback) {
       return function () {
-	$(this).addClass('disabled');
+	$(this).prop('disabled', true);
         $.ajax({
           url: post_url,
           method: 'POST',
@@ -75,7 +75,7 @@
             job: current_job_id
           },
           success: function (res) {
-	    $(this).removeClass("disabled");
+	    $(this).prop("disabled", false);
             if (res.status == "success") {
               if (success_info) {
                 displayString(success_info);
