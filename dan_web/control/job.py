@@ -177,9 +177,8 @@ def pre_ajax():
     """
     实现所有表单里需要pre_ajax的逻辑.
     如果以后类型更多, 应该考虑把实际处理交给adapter, 每个工具的adapter去查看哪个配置选择的话需要新的哪个配置或者需要做什么, 现在逻辑感觉还不够清晰"""
-    name = _f.request.form['name']
+    name = _f.request.form.get('name', None)
     if name == 'input_proto':
-        # 找出所有的prototxt, 还可以给用户提供几个软链接到通用的VGG,.把下载/删除那个软链接的按钮给关掉, 并且下载的处理函数检查一下
         input_proto_list = ['upload_prototxt/' + x for x in _l.current_user.get_file_name_list('upload_prototxt')]
         input_proto_list += ['generated_prototxt/' + x for x in _l.current_user.get_file_name_list('generated_prototxt')]
         input_proto_list += ['shared/' + x for x in get_shared_file_name_list('*.prototxt')]

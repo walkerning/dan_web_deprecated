@@ -42,7 +42,7 @@
   }
 
   function bind_event_listeners (prepend_selector, append_selector) {
-    var selector_pre_ajax = "select.pre_ajax";
+    var selector_pre_ajax = "button.pre_ajax";
     var selector_post_ajax = "select.post_ajax";
 
     if (prepend_selector) {
@@ -55,22 +55,24 @@
     }
 
     // bind listeners
-    $(selector_pre_ajax).click(function () {
-      var $this = $(this);
+    $(selector_pre_ajax).click(function (evt) {
+      evt.preventDefault();
+      var this_name = $(this).attr('name');
+      var $this_select = $("select[" + "name='" + this_name +"']");
       $.ajax({
         url: FORM_PRE_AJAX_URL,
         method: "POST",
         data: {
-          name: $(this).attr("name")
+          name: this_name
         },
         success: function (response) {
           if (response.status == 'success') {
             // remove old options
-            $this.children().remove();
+            $this_select.children().remove();
 
             // insert new options
             for (var index in response.data) {
-              $this.append(option_generate(response.data[index]));
+              $this_select.append(option_generate(response.data[index]));
             }
           }
           else {
@@ -144,6 +146,10 @@
       });
 
     });
+
+    // trigger the first update for pre ajax selectors
+    $(selector_pre_ajax).trigger('click');
+
   }
 
   $(document).ready(function(){

@@ -2,8 +2,12 @@
 <div class="col-lg-4">
   <label for="form_arg_{{ ARG_NAME }}">{{ CONFIG_NAME }}</label>
 </div>
-<div class="col-lg-8 {{ REQUIRED }}">
-  <select name="{{ ARG_NAME }}" id="form_arg_{{ ARG_NAME }}" class="form-control pre_ajax">
+<div class="col-lg-6 {{ REQUIRED }}">
+  <select name="{{ ARG_NAME }}" id="form_arg_{{ ARG_NAME }}" class="form-control">
   </select>
 </div>
+<div class="col-lg-1">
+  <button class="btn btn-primary pre_ajax" name="{{ ARG_NAME }}"><span class="glyphicon glyphicon-refresh"></span></button>
+</div>
+
 </div>
