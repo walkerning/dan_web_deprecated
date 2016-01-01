@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
 from dan_web.adapter.job_adapter import Tool
