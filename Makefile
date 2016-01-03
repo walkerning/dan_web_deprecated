@@ -5,7 +5,7 @@ runmyvps:
 	gunicorn -k flask_sockets.worker --access-logfile _access_log.log --log-file _gunicorn_log.log --log-level debug dan_web.app:app --bind 0.0.0.0:8002 -D
 
 runnod:
-	gunicorn -k flask_sockets.worker --access-logfile - --log-level debug dan_web.app:app --bind 0.0.0.0:8002
+	gunicorn -k flask_sockets.worker --access-logfile - --log-level debug dan_web.app:app --bind 0.0.0.0:8003
 
 ready:
 	@# 以后再来写自动部署, 包括依赖啥的

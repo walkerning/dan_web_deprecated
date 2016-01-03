@@ -107,8 +107,8 @@ class JobRunner(object):
         self._job = job
         self._db = db
         self.job_adapter = get_adapter([('job_type', job.job_type)])()
-        if not which(job.job_type):
-            raise RunnerException('在服务器环境的里没有找到工具: %s'%job.job_type)
+        if not which("dan"):
+            raise RunnerException('在服务器环境的里没有找到dan')
 
         # convert conf
         self.conf = self.job_adapter.convert_conf(job.get_conf(),
@@ -119,16 +119,29 @@ class JobRunner(object):
 
                                                                   })
         self.conf['hide_file_path'] = True
-        self._tmp_conf_file = self._get_tmp_conf_file(job)
-        yaml.dump(self.conf, open(self._tmp_conf_file, 'w'))
+
+        # dump temporary config file for danp
+        self._tmp_conf_file = self.dump_dan_config_file()
+
         pycaffe_path =  os.environ.get('DAN_WEB_PYCAFFE_PATH', None)
         if pycaffe_path is not None:
-            self.runner = [job.job_type, '-c', pycaffe_path, 'conf', self._tmp_conf_file]
+            self.runner = ['dan', '-c', pycaffe_path, '-f', self._tmp_conf_file]
         else:
-            self.runner = [job.job_type, 'conf', self._tmp_conf_file]
+            self.runner = ['dan', '=f', self._tmp_conf_file]
 
         self.log_file = job.abs_log_file
         self.pid_file = job.pid_file
+
+    def dump_dan_config_file(self):
+        _tmp_conf_file = self._get_tmp_conf_file(self._job)
+        tmp_dan_conf = {"pipeline" : [self._job.job_type], "config": {
+            self._job.job_type: {
+                "command" : self._job.job_type,
+            }
+        }}
+        tmp_dan_conf["config"][self._job.job_type].update(self.conf)
+        yaml.dump(tmp_dan_conf, open(_tmp_conf_file, 'w'))
+        return _tmp_conf_file
 
     # def __init__(self, job, db):
     #     self._job = job
