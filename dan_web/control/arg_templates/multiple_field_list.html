@@ -1,0 +1,22 @@
+<!-- this is a plain text input form-group -->
+{% set col_size = 8 / FIELD_LIST|length %}
+<row>
+<div class="col-lg-4">
+  <label for="form_arg_{{ ARG_NAME }}" class="label-control">{{ CONFIG_NAME }}</label>
+</div>
+<div class="col-lg-8">
+<button class="btn btn-primary" name="{{ ARG_NAME }}"><span class="glyphicon glyphicon-plus"></span></button>
+</div>
+</row>
+<row>
+<div class="col-lg-4">
+</div>
+{% for field in FIELD_LIST %}
+<div class="col-lg-{{ col_size|int }}">
+    <p>{{ field['text'] }}</p>
+</div>
+{% endfor %}
+</row>
+<div class="multi" name="{{ ARG_NAME }}">
+</div>
+

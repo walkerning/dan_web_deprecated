@@ -22,6 +22,7 @@ class ViewConfer(object):
 
     JOB_TYPE_TO_DESC_CONF = {
         "svd_tool": "全连接层分解",
+        "prune_tool": "剪枝",
         "_other": "未知的Job类型"
     }
 

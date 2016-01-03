@@ -23,6 +23,22 @@ class FormViewAdapter(object):
             self.name = app
         self.env = Environment(loader=PackageLoader(self.name, templates_dir))
 
+    def render_js(self, arg_dict):
+        """
+        Render a js."""
+        js_list = []
+
+        for arg_name, render_conf in arg_dict.iteritems():
+            # fixme: 如果找不到template的错误处理
+            try:
+                template = self.env.get_template(render_conf['template'] + '.js')
+            except Exception:
+                continue
+            js_list.append(template.render(ARG_NAME=arg_name,
+                                           **render_conf['template_args']))
+
+        return '\n'.join(js_list)
+        
     def render_form(self, arg_dict, addition_info='', required=False):
         """
         Render a argument form."""

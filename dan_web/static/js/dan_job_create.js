@@ -14,6 +14,15 @@
     return obj.closest('div').hasClass('required');
   }
 
+  function get_value (obj) {
+    if ($(obj).attr('type') == 'checkbox') {
+      return obj.checked;
+    } // 还有radio button
+    else {
+      return $(obj).val();
+    }
+  }
+
   function post_create_job (event) {
     event.preventDefault();
     // create a hidden form
@@ -35,6 +44,25 @@
           value: value
         }));
       }
+    });
+      
+    // add multiple fields configs
+    $("div.multi").each(function (index) {
+      var name = $(this).attr('name');
+      var multi_list = [];
+      $(this).find('row.multi').each(function (index) {
+        var subform = {};
+        $(this).find('input').each(function (ind) {
+       	    subform[$(this).attr('name')] = get_value(this);
+        });
+	multi_list.push(subform);
+      });
+
+      form.append($("<input>").attr({
+	type: 'hidden',
+        name: name,
+	value: JSON.stringify(multi_list)
+      }));
     });
 
     // submit the form
@@ -131,6 +159,9 @@
 
             // 加入表单
             $this.closest("div.form-group").after(response.data);
+
+            // 执行js
+	    eval(response.js);
 
             // bind event listeners for these new elements
             bind_event_listeners("div.form-group[create_by='" + this_name + "'] ");

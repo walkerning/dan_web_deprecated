@@ -127,7 +127,7 @@ class JobRunner(object):
         if pycaffe_path is not None:
             self.runner = ['dan', '-c', pycaffe_path, '-f', self._tmp_conf_file]
         else:
-            self.runner = ['dan', '=f', self._tmp_conf_file]
+            self.runner = ['dan', '-f', self._tmp_conf_file]
 
         self.log_file = job.abs_log_file
         self.pid_file = job.pid_file
