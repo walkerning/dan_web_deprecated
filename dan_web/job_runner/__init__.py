@@ -42,23 +42,28 @@ def read_log_and_send_realtime(ws, log_file):
     p = subprocess.Popen(['tail', '-n', '0', '-F', log_file], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, close_fds=True) # remember to close fds
 
-    # must strip to get the last log
-    now_message_list = now_message.strip('\n').split('\n')
-    for message in now_message_list:
-        if not message.strip('\n') == END_LOG_TOKEN:
-            ws.send(message)
-        else:
-            p.terminate()
-            return
-
-    # logfile is changing,
-    for message in iter(p.stdout.readline, END_LOG_TOKEN):
-        message = message.strip('\n')
-        if message == END_LOG_TOKEN:
-            break
-        ws.send(message.strip('\n'))
-
-    p.terminate()
+    try:
+        # must strip to get the last log
+        now_message_list = now_message.strip('\n').split('\n')
+        for message in now_message_list:
+            if not message.strip('\n') == END_LOG_TOKEN:
+                ws.send(message)
+            else:
+                p.terminate()
+                return
+    
+        # logfile is changing,
+        for message in iter(p.stdout.readline, END_LOG_TOKEN):
+            message = message.strip('\n')
+            if message == END_LOG_TOKEN:
+                break
+            ws.send(message.strip('\n'))
+    
+    except Exception:
+        # 这里这样好不好...
+        pass
+    finally:
+        p.terminate()
 
 def kill_running_job(job, trys=5):
     if job.job_status != 'running':

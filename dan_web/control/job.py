@@ -190,6 +190,11 @@ def pre_ajax():
         input_caffemodel_list += ['generated_caffemodel/' + x for x in _l.current_user.get_file_name_list('generated_caffemodel')]
 
         return success_json(data=input_caffemodel_list)
+    elif name == 'input_npz':
+        input_npz_list = ['shared/' + x for x in get_shared_file_name_list('*.npz')]
+        # fixme: 文件管理这一块可能还需要大改
+        input_npz_list += ['upload_caffemodel/' + x for x in _l.current_user.get_file_name_list('upload_caffemodel') if x.endswith('.npz')]
+        return success_json(data=input_npz_list)
     else:
         # 以后如果要加更多还是放在adapter里, 其实还没有完全设计好...
         return fail_json()

@@ -23,6 +23,8 @@ class ViewConfer(object):
     JOB_TYPE_TO_DESC_CONF = {
         "svd_tool": "全连接层分解",
         "prune_tool": "剪枝",
+        "quantize_tool": "量化",
+        "nonmodel_tool": "无模型剪枝与量化",
         "_other": "未知的Job类型"
     }
 
