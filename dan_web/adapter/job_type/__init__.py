@@ -213,7 +213,7 @@ class Adapter_nonmodel_tool(Tool):
         ("input_npz", {
             "template": "pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的npz文件'
+                'CONFIG_NAME': '输入的npz文件(后缀名必须为.npz)'
             },
             "convert_flags": ['input_file']
         }),
@@ -236,7 +236,15 @@ class Adapter_nonmodel_tool(Tool):
         })
     ]
 
-    optional = []
+    optional = [
+        ("note_for_user", {
+            "template": "plain_text",
+            "template_args": {
+                'CONFIG_NAME': '格式转换工具',
+                'TEXT': '<a href="https://github.com/angel-eye/dan-tools" target="_blank">转换工具github仓库</a>'
+            }
+        })
+    ]
 
     def convert_conf(self, conf_dict, addition_converter=None):
         super_converted =  super(Adapter_nonmodel_tool,

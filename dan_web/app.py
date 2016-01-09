@@ -154,7 +154,7 @@ def refresh_file_list():
     if not dir_name:
         return fail_json(error_string='no dir_name specified')
 
-    return success_json(file_list=_l.current_user.get_file_name_list(dir_name))
+    return success_json(file_list=_l.current_user.get_file_info_list(dir_name))
 
 # 之后还是用nginx serve吧, 先这么写
 @app.route("/download_file/<file_name>", methods=['GET'])

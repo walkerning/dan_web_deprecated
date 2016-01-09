@@ -8,7 +8,7 @@ from werkzeug import generate_password_hash, check_password_hash
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
-from dan_web.helper import chdir
+from dan_web.helper import chdir, sizeof_fmt
 from dan_web.adapter.job_adapter import get_adapter
 from dan_web.adapter.secure import secure_conf
 from dan_web.error import ConfigException
@@ -146,6 +146,22 @@ def init_db(app):
                 return []
             else:
                 return os.listdir(dir_path)
+
+        def get_file_info_list(self, dir_name):
+            # 默认返回name, mtime, size, 按照mtime从老到新排序
+            file_name_list = self.get_file_name_list(dir_name)
+            file_info_list = []
+            dir_path = self.get_user_dir(dir_name)
+            for file_name in file_name_list:
+                (_, _, _, _, _, _, size, _, mtime, _) = os.stat(
+                    os.path.join(dir_path, file_name)
+                )
+                file_info_list.append({
+                    'name': file_name,
+                    'mtime': mtime,
+                    'size': sizeof_fmt(size)
+                })
+            return sorted(file_info_list, key=lambda x: x['mtime'])
 
         def get_running_jobs(self):
             return Job.query.filter_by(active=True, user_id=self.user_id, job_status='running').all()

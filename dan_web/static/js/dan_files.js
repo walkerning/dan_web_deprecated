@@ -120,7 +120,9 @@
 
         // push into the file name list
         for (var index in response.file_list) {
-          var filename = response.file_list[index];
+	  var fileinfo = response.file_list[index];
+          var filename = fileinfo['name'];
+	  var filesize = fileinfo['size'];
           var new_tr = $("<tr>", {name: filename});
 
           // filename td
@@ -130,7 +132,7 @@
             .css('overflow', 'hidden')
             .css('width', '110px')
             .attr('data-toggle', 'tooltip')
-            .attr('title', filename)
+            .attr('title', filename + ' 大小: ' + filesize)
             .attr('data-original-title', filename)
             .attr('data-placement', 'bottom');
           filename_td.append('<p class="file_name_item">' + filename + '</p>' );
