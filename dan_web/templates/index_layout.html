@@ -10,9 +10,13 @@
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
         <li>
-          <a><p style="color: black; font-size: 20px">Dan Web</p></a>
+          <a><p style="color: black; font-size: 20px">Compression Tool</p></a>
           </li>
         <li><a class="side_item" id="file-manage" href="{{ url_for('index') }}">文件管理</a></li>
+      </ul>
+      <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
+      <ul class="nav nav-sidebar">
+        <li><a class="side_item" href="{{ url_for('job.job_create' )}}" id="create-new-job">创建新Job</a></li>
       </ul>
       <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">
@@ -23,10 +27,6 @@
         <li><a class="side_item job_item" id="jobid_{{ job[1] }}" name="{{ job[0] }}" href="{{ url_for( 'job.job_item', job_id=job[1]) }}">{{ job[0] }}</a></li>
         {% endfor %}
         {% endif %}
-      </ul>
-      <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
-      <ul class="nav nav-sidebar">
-        <li><a class="side_item" href="{{ url_for('job.job_create' )}}" id="create-new-job">创建新Job</a></li>
       </ul>
       <ul class="nav nav-sidebar" role="seperator"><li><hr></li></ul>
       <ul class="nav nav-sidebar">

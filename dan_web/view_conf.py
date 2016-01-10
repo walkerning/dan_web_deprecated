@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 一些View的配置"""
-from __future__ import unicode_literals # 都想加一个import hook了
+from __future__ import unicode_literals
 
 class ViewConfer(object):
     STATUS_TO_LABEL_CONF = {
