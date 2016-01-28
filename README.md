@@ -48,19 +48,12 @@ GRANT ALL PRIVILEGES ON {DATABASE_NAME}.* TO '{MYSQL_USER}'@'localhost' WITH GRA
 
 ### 配置依賴和環境
 
-#### virtualenv
-
-為了隔離依賴 ，可以使用``virtualenv``
-
-```bash
-sudo pip install virtualenv
-virtualenv --system-site-packages venv
-# 之後的操作均在這個venv下進行
-```
-
 #### anonconda
 
-如果已經配置好了caffe, numpy應該已經有, 如果沒有，compression-tool依賴 `numpy`，可以安裝anaconda, 而且可以用mkl提速:
+如果已經配置好了caffe, numpy應該已經有, 如果沒有，compression-tool依賴 `numpy`.
+
+另外可以安裝anaconda的整個python環境, 而且可以方便的用mkl提速
+(**如果要使用anaconda, 請不要使用後面的virtualenv**)
 
 在[anoconda官網](https://www.continuum.io/downloads)上安裝anonconda，然後配置mkl
 
@@ -69,19 +62,20 @@ $ conda update conda
 $ conda install mkl
 ```
 
+#### virtualenv
+
+如果不使用anonconda，而採用系統Python安裝依賴的方法，為了隔離依賴 ，可以使用``virtualenv``
+
+```bash
+sudo pip install virtualenv
+virtualenv --system-site-packages venv
+# 之後的操作均在這個venv下進行
+```
+
 #### caffe
 
 按照[caffe官網](http://caffe.berkeleyvision.org/installation.html)的指導配置好caffe和pycaffe wrapper
 
-#### compression-tool
-
-安裝compression-tool
-
-```bash
-pip install git+https://github.com/angel-eye/compression-tool
-```
-
-運行 ```dan -h``` 查看幫助，並確認compression-tool已經裝好
 
 #### 網站本身的依賴
 
@@ -103,7 +97,7 @@ pip install -r requirement.txt
 
 ### 創建用戶
 
- 由於沒開放註冊功能，需由管理員手動創建
+由於沒開放註冊功能，需由管理員手動創建用戶
 
 ```make my-test-model```
 
@@ -113,9 +107,16 @@ pip install -r requirement.txt
 new_user = User.create_user("{username}", "{userpassword}")
 ```
 
+### 運行
 
+``` make runmyvps ```
+
+將部署在0.0.0.0:8002, gunicorn的log和錯誤log記錄在`_gunicorn_log.log`, access log記錄在`_access_log.log`. 
+可以自己改Makefile裡面的`runmyvps`的行為來改變
 
 自动化部署
 -----------------
 
 自動化部署的脚本可以有，不過要以後才能來寫...
+
+不過真的這個網站能不能放一下好好規劃重寫啊...

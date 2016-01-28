@@ -21,3 +21,7 @@ gunicorn==19.4.1
 # websocket
 git+https://github.com/philipn/flask-sockets#egg=flask-sockets
 gevent-websocket==0.9.5
+
+
+# compression-tool
+git+https://github.com/angel-eye/compression-tool#egg=compression-tool
