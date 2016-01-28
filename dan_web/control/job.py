@@ -43,7 +43,7 @@ def job_item(job_id):
     else:
         job_status = (job.job_status, view_confer.status_to_color(job.job_status))
         return _f.render_template("job_item.html", now_active_tab="jobid_" + str(job.job_id),
-                                  job_id=str(job.job_id), title="任务管理",
+                                  job_id=str(job.job_id), title="Job Management",
                                   job_list=job_list, job_conf=job.get_conf(),
                                   job_name=job.job_name, job_type=view_confer.job_type_to_desc(job.job_type),
                                   job_status=job_status)
@@ -72,37 +72,38 @@ def job_create():
         # must secure user input a bit here
         job_type = conf.get('job_type', None)
         if not job_type:
-            return fail_redirect(_f.url_for('job.job_create'), 'Job新建失败: 没有指定Job类型')
+            return fail_redirect(_f.url_for('job.job_create'), 'Fail creating job: '
+                                 'did not specify job type')
         
         try:
             new_job = Job.create_job(_l.current_user.user_id, conf)
         except ExpectedException as e:
             # 超过了job限制, 配置不完全(客户端也会检验)
             return fail_redirect(_f.url_for('job.job_create'),
-                                 'Job新建失败: %s' % e)
+                                 'Fail creating job: %s' % e)
         except Exception as e:
             # Internal Error, may be a bug, log to log file
             # fixme: add traceback here
             print(e)
             return fail_redirect(_f.url_for('job.job_create'),
-                                 'Job新建失败')
+                                 'Fail creating job')
         else:
             return success_redirect(_f.url_for('job.job_item', job_id=new_job.job_id),
-                                    'Job新建成功')
+                                    'Successfully creating job')
 
 @job_blueprint.route('ajax/job/run', methods=["POST"])
 @_l.login_required
 def job_run():
     job_id = _f.request.form.get('job')
     if job_id is None:
-        return fail_json(error_string="运行Job失败: 没有提供job id")
+        return fail_json(error_string="Fail running job: did not specify job id")
     job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
     if job is None:
-        return fail_json(error_string="运行Job失败: 不合法的Job运行请求")
+        return fail_json(error_string="Fail running job: wrong job running request")
     # 检查job状态
     if job.job_status == 'running':
         # fixme: 如果出现at-exit没有执行的情况怎么办...
-        return fail_json(error_string="运行Job失败: 该Job已经在运行")
+        return fail_json(error_string="Fail running job: this job is already running")
     # 新建子进程运行工具
     # try:
     #     job_runner = JobRunner(job, db)
@@ -120,7 +121,7 @@ def job_run():
         if os.WIFEXITED(status):
             exit_status = os.WEXITSTATUS(status)
             if exit_status != 0:
-                return fail_json(error_string="运行Job失败")
+                return fail_json(error_string="Fail running job")
     except Exception as e:
         print(e)
         raise
@@ -134,40 +135,40 @@ def job_run():
 def job_delete():
     job_id = _f.request.form.get('job')
     if job_id is None:
-        return fail_redirect(_f.url_for('index'), "删除Job失败: 没有提供job id")
+        return fail_redirect(_f.url_for('index'), "Fail deleting job: did not specify job id")
     job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
     if job is None:
-        return fail_redirect(_f.url_for('index', "删除Job失败: 不合法的Job删除请求"))
+        return fail_redirect(_f.url_for('index', "Fail deleting job: wrong job deleting request"))
     # 检查job状态
     if job.job_status == 'running':
         return fail_redirect(_f.url_for('job.job_item', job_id=job.job_id),
-                             "删除Job失败: 该Job已经在运行, 请先中止")
+                             "Fail deleteing job: this job is running, please first stop it")
     try:
         Job.delete_by_job_id(job_id)
     except Exception as e:
         print(e)
         return fail_redirect(_f.url_for('job.job_item', job_id=job.job_id),
-                             '删除Job失败')
+                             'Fail deleting job')
     else:
-        return success_redirect(_f.url_for('index'), '删除Job成功')
+        return success_redirect(_f.url_for('index'), 'Successfully deleting job')
 
 @job_blueprint.route('ajax/job/stop', methods=["POST"])
 @_l.login_required
 def job_stop():
     job_id = _f.request.form.get('job')
     if job_id is None:
-        return fail_json(error_string="中止Job失败: 没有提供job id")
+        return fail_json(error_string="Fail stopping job: did not specify job id")
     job = Job.get_job_of_user_id(job_id, _l.current_user.user_id)
     if job is None:
-        return fail_json(error_string="中止Job失败: 不合法的Job删除请求")
+        return fail_json(error_string="Fail stopping job: wrong job stopping request")
     # 检查Job status
     if not job.job_status == 'running':
-        return fail_json(error_string="中止Job失败: 该Job没有在运行")
+        return fail_json(error_string="Fail stopping job: this job is not running")
     try:
         kill_running_job(job)
     except Exception as e:
         print(e)
-        return fail_json(error_string='中止Job失败: 尝试刷新或稍等')
+        return fail_json(error_string='Fail stopping job: please try refreshing the page')
     else:
         return success_json()
 
@@ -207,29 +208,29 @@ def post_ajax():
     如果以后类型更多, 应该考虑把实际处理交给adapter, 每个工具的adapter去查看哪个配置选择的话需要新的哪个配置"""
     json_str = _f.request.form.get('data', '')
     if not json_str:
-        return fail_json(error_string='错误的参数')
+        return fail_json(error_string='wrong parameters')
     try:
         json_data = json.loads(json_str)
     except Exception:
-        return fail_json(error_string='错误的json格式')
+        return fail_json(error_string='wrong json format')
     name = json_data.get('name', '')
     value = json_data.get('value', '')
     create_by_list = json_data.get('create_by_list', [])
     if not name or not value:
-        return fail_json(error_string='错误的参数')
+        return fail_json(error_string='wrong parameters')
     adapter_layers = []
     for create_by in reversed(create_by_list):
         create_by_name = create_by.get('name', '')
         create_by_value = create_by.get('value', '')
         if not create_by_name or not create_by_value:
-            return fail_json(error_string='错误的Adapter')
+            return fail_json(error_string='wrong job adapter')
         else:
             adapter_layers.append((create_by_name, create_by_value))
     adapter_layers.append((name, value))
     adapter = get_adapter(adapter_layers)
 
     if adapter is None:
-        return fail_json(error_string='错误的Adapter')
+        return fail_json(error_string='wrong job Adapter')
     else:
         new_form_groups = fv_adapter.render_form(adapter.required, addition_info='create_by="%s"'%name, required=True)
         new_form_groups += fv_adapter.render_form(adapter.optional, addition_info='create_by="%s"'%name)

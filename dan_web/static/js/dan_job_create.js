@@ -104,7 +104,7 @@
             }
           }
           else {
-            swal("获取新options列表失败, 请重新刷新");
+            swal("Fail retrieving new option lists, please refresh again.");
           }
         }
       });

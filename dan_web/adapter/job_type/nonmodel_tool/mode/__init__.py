@@ -7,8 +7,8 @@ class Adapter_foolmode(Tool):
     optional = [('compression_rate', {
         'template': 'plain_text_input',
         'template_args': {
-            'CONFIG_NAME': '期望达到的总体压缩率',
-            'PLACEHOLDER': '4~20中的一个整数, 默认4'
+            'CONFIG_NAME': 'compress rate',
+            'PLACEHOLDER': 'an integer in the range 4~20, default 4'
         }
     })]
     required = []
@@ -18,22 +18,22 @@ class Adapter_advancemode(Tool):
         ('prune_conditions', {
             'template': 'multiple_field_list',
             'template_args': {
-                'CONFIG_NAME': '剪枝操作配置',
+                'CONFIG_NAME': 'prunning configuration',
                 'FIELD_LIST' : [
                     {
                         'type': 'checkbox',
                         'name': 'regex',
-                        'text': '是否为正则表达式'
+                        'text': 'regular exp?'
                     },
                     {
                         'type': 'text',
                         'name': 'pattern',
-                        'text': '匹配子字符串或正则表达式'
+                        'text': 'sub-string or regular exp'
                     },
                     {
                         'type': 'text',
                         'name': 'rate',
-                        'text': '剪枝去掉的比例'
+                        'text': 'prunning ratio'
                     }
                 ]
             }
@@ -41,22 +41,22 @@ class Adapter_advancemode(Tool):
         ('quantize_conditions', {
             'template': 'multiple_field_list',
             'template_args': {
-                'CONFIG_NAME' : '量化操作配置',
+                'CONFIG_NAME' : 'quantization configuration',
                 'FIELD_LIST' : [
                     {
                         'type': 'checkbox',
                         'name': 'regex',
-                        'text': '是否为正则表达式'
+                        'text': 'reg exp?'
                     },
                     {
                         'type': 'text',
                         'name': 'pattern',
-                        'text': '匹配子字符串或正则表达式'
+                        'text': 'sub-string or regular exp'
                     },
                     {
                         'type': 'text',
                         'name': 'bits',
-                        'text': '量化bit数'
+                        'text': 'quantization bits number'
                     }
                 ]
             }

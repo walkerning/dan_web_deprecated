@@ -14,8 +14,8 @@
     <table class="table table-striped job_conf">
       <thead>
         <tr>
-          <th>配置名</th>
-          <th>配置值</th>
+          <th>Config Name</th>
+          <th>Config Value</th>
         </tr>
       </thead>
       <tbody>
@@ -39,11 +39,11 @@
 
     <!-- job operation -->
     <div class="list-group" style="width: 50%; margin: 20% 0 20% 0;">
-      <button type="button" class="btn btn-default list-group-item" {{ 'disabled' if job_status[0] == 'running' else '' }} id="run_job_btn">开始该Job</button>
+      <button type="button" class="btn btn-default list-group-item" {{ 'disabled' if job_status[0] == 'running' else '' }} id="run_job_btn">Start Job</button>
       <hr>
-      <button type="button" class="btn btn-default list-group-item" {{ 'disabled' if job_status[0] != 'running' else '' }} id="stop_job_btn">中止该Job</button>
+      <button type="button" class="btn btn-default list-group-item" {{ 'disabled' if job_status[0] != 'running' else '' }} id="stop_job_btn">Stop Job</button>
       <hr>
-      <button type="button" class="btn btn-default list-group-item" {{ 'disabled' if job_status[0] == 'running' else '' }} id="delete_job_btn">删除该Job</button>
+      <button type="button" class="btn btn-default list-group-item" {{ 'disabled' if job_status[0] == 'running' else '' }} id="delete_job_btn">Delete Job</button>
     </div>
   </div>
 </div>
@@ -54,7 +54,7 @@
   <div class="col-lg-5 col-lg-offset-1"><p style="font-size: 25px; font-weight: 400; color:white">{{ job_status[0] }}</p></div>
   <!-- <span class="label label-pill label-{{ job_status[1] }}" style="padding: 10px;">{{ job_status[0] }}</span>-->
   <div class="col-lg-3 col-lg-offset-2">
-    <button type="button" class="btn btn-info" {{ 'disabled' if job_status[0] == 'starting' else '' }} id="log_job_btn" style="margin-top: 5px;">查看Job Log</button>
+    <button type="button" class="btn btn-info" {{ 'disabled' if job_status[0] == 'starting' else '' }} id="log_job_btn" style="margin-top: 5px;">Check Job Log</button>
   </div>
 </div>
 

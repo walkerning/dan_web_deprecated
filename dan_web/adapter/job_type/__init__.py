@@ -13,45 +13,45 @@ class Adapter_svd_tool(Tool):
             "template":"pre_ajax_selector",
             "template_args": {
                 # 所需的配置
-                'CONFIG_NAME': '输入的prototxt'
+                'CONFIG_NAME': 'input prototxt'
             },
             "convert_flags": ['input_file']
         }),
         ("input_caffemodel", {
             "template": "pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的caffemodel'
+                'CONFIG_NAME': 'input caffemodel'
             },
             "convert_flags": ['input_file']
         }),
         ("output_proto", {
             "template": "plain_text_input",
             "template_args": {
-                'CONFIG_NAME': '输出的prototxt',
-                'PLACEHOLDER': '会覆盖generated目录下的同名文件'
+                'CONFIG_NAME': 'output prototxt',
+                'PLACEHOLDER': 'will override files with the same name'
             },
             "convert_flags": ['output_proto']
         }),
         ("output_caffemodel", {
             "template": "plain_text_input",
             "template_args": {
-                'CONFIG_NAME': '输出的caffemodel',
-                'PLACEHOLDER': '会覆盖generated目录下的同名文件'
+                'CONFIG_NAME': 'output caffemodel',
+                'PLACEHOLDER': 'will override files with the same name'
             },
             "convert_flags": ['output_caffemodel']
         }),
         ("layer_name", {
             "template": "plain_text_input",
             "template_args": {
-                'CONFIG_NAME': '要分解的层名',
-                'PLACEHOLDER': '一个存在的全连接层的名字'
+                'CONFIG_NAME': 'layer name',
+                'PLACEHOLDER': 'the name of an existing FC layer'
             }
         }),
         ("layer_method", {
             "template": "post_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '分解方法',
-                'AVAILABLE_OPTIONS': [('rank', '保留确定秩数')],
+                'CONFIG_NAME': 'decompose method',
+                'AVAILABLE_OPTIONS': [('rank', 'retain <number> ranks of the matrix')],
             },
             "convert_flags": ['recursive']
         })
@@ -85,44 +85,44 @@ class Adapter_prune_tool(Tool):
         ("input_proto", {
             "template":"pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的prototxt'
+                'CONFIG_NAME': 'input prototxt'
             },
             "convert_flags": ['input_file']
         }),
         ("input_caffemodel", {
             "template": "pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的caffemodel'
+                'CONFIG_NAME': 'input caffemodel'
             },
             "convert_flags": ['input_file']
         }),
         ("output_caffemodel", {
             "template": "plain_text_input",
             "template_args": {
-                'CONFIG_NAME': '输出的caffemodel',
-                'PLACEHOLDER': '会覆盖generated目录下的同名文件'
+                'CONFIG_NAME': 'output caffemodel',
+                'PLACEHOLDER': 'will override files with the same name'
             },
             "convert_flags": ['output_caffemodel']
         }),
         ("conditions", {
             "template": "multiple_field_list",
             "template_args": {
-                'CONFIG_NAME' : '匹配条件与剪枝比例',
+                'CONFIG_NAME' : 'matching condition and prunning ratio',
                 'FIELD_LIST' : [
                     {
                         'type': 'checkbox',
                         'name': 'regex',
-                        'text': '是否为正则表达式'
+                        'text': 'regular exp?'
                     },
                     {
                         'type': 'text',
                         'name': 'pattern',
-                        'text': '匹配子字符串或正则表达式'
+                        'text': 'sub-string or regular exp'
                     },
                     {
                         'type': 'text',
                         'name': 'rate',
-                        'text': '剪枝去掉的比例'
+                        'text': 'prunning ratio'
                     }
                 ]
             }
@@ -149,44 +149,44 @@ class Adapter_quantize_tool(Tool):
         ("input_proto", {
             "template":"pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的prototxt'
+                'CONFIG_NAME': 'input prototxt'
             },
             "convert_flags": ['input_file']
         }),
         ("input_caffemodel", {
             "template": "pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的caffemodel'
+                'CONFIG_NAME': 'input caffemodel'
             },
             "convert_flags": ['input_file']
         }),
         ("output_caffemodel", {
             "template": "plain_text_input",
             "template_args": {
-                'CONFIG_NAME': '输出的caffemodel',
-                'PLACEHOLDER': '会覆盖generated目录下的同名文件'
+                'CONFIG_NAME': 'output caffemodel',
+                'PLACEHOLDER': 'will override files with the same name'
             },
             "convert_flags": ['output_caffemodel']
         }),
         ("conditions", {
             "template": "multiple_field_list",
             "template_args": {
-                'CONFIG_NAME' : '匹配条件与量化bit数',
+                'CONFIG_NAME' : 'matching conditions and quantization bit number',
                 'FIELD_LIST' : [
                     {
                         'type': 'checkbox',
                         'name': 'regex',
-                        'text': '是否为正则表达式'
+                        'text': 'regular exp?'
                     },
                     {
                         'type': 'text',
                         'name': 'pattern',
-                        'text': '匹配子字符串或正则表达式'
+                        'text': 'sub-string or regular exp'
                     },
                     {
                         'type': 'text',
                         'name': 'bits',
-                        'text': '量化bit数'
+                        'text': 'quantization bits number'
                     }
                 ]
             }
@@ -213,24 +213,24 @@ class Adapter_nonmodel_tool(Tool):
         ("input_npz", {
             "template": "pre_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '输入的npz文件(后缀名必须为.npz)'
+                'CONFIG_NAME': 'input npz(*.npz)'
             },
             "convert_flags": ['input_file']
         }),
         ("output_file", {
             "template": "plain_text_input",
             "template_args": {
-                'CONFIG_NAME': '输出的bin文件',
-                'PLACEHOLDER': '会覆盖generated_caffemodel目录下的同名文件'
+                'CONFIG_NAME': 'output bin file',
+                'PLACEHOLDER': 'will override files with the same name'
             },
             "convert_flags": ['output_caffemodel']
         }),
         ("mode", {
             "template": "post_ajax_selector",
             "template_args": {
-                'CONFIG_NAME': '配置方法',
-                'AVAILABLE_OPTIONS': [('foolmode', '简易模式'),
-                                      ('advancemode', '高级模式: 详细指定剪枝和量化的细节')],
+                'CONFIG_NAME': 'configuration mode',
+                'AVAILABLE_OPTIONS': [('foolmode', 'simple'),
+                                      ('advancemode', 'advance: specify details yourself')],
             },
             "convert_flags": ['recursive']
         })
@@ -240,8 +240,8 @@ class Adapter_nonmodel_tool(Tool):
         ("note_for_user", {
             "template": "plain_text",
             "template_args": {
-                'CONFIG_NAME': '格式转换工具',
-                'TEXT': '<a href="https://github.com/angel-eye/dan-tools" target="_blank">转换工具github仓库</a>'
+                'CONFIG_NAME': 'format converting tool',
+                'TEXT': '<a href="https://github.com/angel-eye/dan-tools" target="_blank">The github repo of the converting tool</a>'
             }
         })
     ]

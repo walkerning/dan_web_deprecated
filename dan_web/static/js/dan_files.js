@@ -20,7 +20,7 @@
 
           if (upload_status == 'success'){
             console.log('successfully uploaded file');
-            displayString('成功上传');
+            displayString('successfully uploading file');
             refresh_file_list('upload_' + to_upload_file_type);
           }
           else if (upload_status == 'fail'){
@@ -84,7 +84,7 @@
           file_num_ele.html(file_num_ele.html() - 1);
         }
         else
-          swal("删除文件出错", response.error_string);
+          swal("Fail deleting file", response.error_string);
       }
     });
   }
@@ -110,7 +110,7 @@
       success: function(response){
         // get the table to update
         if (response.status != 'success') {
-          swal("更新文件列表出错", response.error_string);
+          swal("Fail updating file list", response.error_string);
           return;
         }
         var this_table = $("table#" + dir_name);
@@ -130,9 +130,9 @@
           filename_td.addClass('filename_td')
             .css('white-space', 'nowrap')
             .css('overflow', 'hidden')
-            .css('width', '110px')
+            .css('width', '120px')
             .attr('data-toggle', 'tooltip')
-            .attr('title', filename + ' 大小: ' + filesize)
+            .attr('title', filename + ' size: ' + filesize)
             .attr('data-original-title', filename)
             .attr('data-placement', 'bottom');
           filename_td.append('<p class="file_name_item">' + filename + '</p>' );
@@ -144,7 +144,7 @@
             dir_name: dir_name,
             class: "btn mini delete_file btn-danger"
           });
-          delete_btn.html('删除');
+          delete_btn.html('del');
           delete_td.append(delete_btn);
 
           // download td
@@ -152,7 +152,7 @@
             name: filename,
             dir_name: dir_name,
             class: "btn mini download_file btn-info"});
-          download_btn.html('下载');
+          download_btn.html('get');
           var download_td = $("<td>", {style: 'width: 40px'});
           download_td.append(download_btn);
           new_tr.append(filename_td);
@@ -173,7 +173,7 @@
           var filename = $(this).attr('name');
           var dir_name = $(this).attr('dir_name');
           // confirm delete
-          var confirm_res = confirm("你确定要删除吗?");
+          var confirm_res = confirm("Are you sure you want to delete the file");
           if (confirm_res)
             delete_file(dir_name, filename);
         });

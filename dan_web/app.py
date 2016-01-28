@@ -103,7 +103,7 @@ def index():
 
     job_list = [(x.job_name, x.job_id) for x in Job.get_job_list_by_user_id(_l.current_user.user_id)]
     return _f.render_template('index_file.html', now_active_tab="file-manage",
-                              job_list=job_list, title="文件管理")
+                              job_list=job_list, title="File Management")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -128,14 +128,14 @@ def upload():
     upload_file_type = _f.request.form.get('filetype', None)
 
     if not upload_file:
-        return fail_json(error_string='没有上传文件')
+        return fail_json(error_string='No uploaded file')
     elif not upload_file_type:
-        return fail_json(error_string='没有提供文件类型')
+        return fail_json(error_string='Did not specify file type')
     elif not _u.allowed_filetype(upload_file_type):
-        return fail_json(error_string=('不支持的文件类型: <%s>' % upload_file_type))
+        return fail_json(error_string=('The file type is not supported: <%s>' % upload_file_type))
     elif not _u.allowed_file(upload_file_type, upload_file.filename):
-        return fail_json(error_string=('不支持的文件名: "%s", '
-                                       '应为 *.%s') % (
+        return fail_json(error_string=('The filename is not supported: "%s", '
+                                       'should be *.%s') % (
                                            upload_file.filename,
                                            upload_file_type))
     else:
@@ -176,12 +176,12 @@ def delete_file():
     file_name = secure_filename(_f.request.form.get('file_name', ''))
     # 可以进一步限制dir_name在那四个里面
     if not dir_name or not file_name:
-        return fail_json(error_string='删除请求参数错误')
+        return fail_json(error_string='Wrong request parameters')
     else:
         try:
             _l.current_user.delete_user_file(dir_name, file_name)
         except Exception:
-            return fail_json(error_string='删除文件失败')
+            return fail_json(error_string='Fail deleting file')
         else:
             return success_json()
 

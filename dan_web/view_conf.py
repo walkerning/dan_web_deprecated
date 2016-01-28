@@ -21,11 +21,11 @@ class ViewConfer(object):
     }
 
     JOB_TYPE_TO_DESC_CONF = {
-        "svd_tool": "全连接层分解",
-        "prune_tool": "剪枝",
-        "quantize_tool": "量化",
-        "nonmodel_tool": "无模型剪枝与量化",
-        "_other": "未知的Job类型"
+        "svd_tool": "SVD of FC Layer", #"全连接层分解",
+        "prune_tool": "Prunning", #"剪枝",
+        "quantize_tool": "Quantization", #"量化",
+        "nonmodel_tool": "No-model Prunning and Quantization", #"无模型剪枝与量化",
+        "_other": "Unknown Job Type", #"未知的Job类型"
     }
 
     def __getattr__(self, attr_name):

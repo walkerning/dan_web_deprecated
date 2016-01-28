@@ -5,13 +5,13 @@
 
 
 {% block main %}
-<h2 class="page-header">文件上传</h2>
+<h2 class="page-header">File Uploading</h2>
 <div class="row" style="margin-bottom: 30px">
   <div class="col-lg-4" style="margin-left: 30px">
     <form enctype="multipart/form-data" id="upload_form" class="form-horizontal">
       <div class="form-group vdivide">
         <div class="col-lg-5">
-          <label for="upload_file_type">文件类型</label>
+          <label for="upload_file_type">File Type</label>
         </div>
         <div class="col-lg-7">
           <select id="upload_file_type" class="form-control">
@@ -23,7 +23,7 @@
       <div class="form-group" role="separator"><hr></div>
       <div class="form-group vdivide">
         <div class="col-lg-5">
-          <label for="file_select">上传文件</label>
+          <label for="file_select">Choose File</label>
         </div>
         <div class="col-lg-7">
           <input type="file" id="file_select" class="form-control" name="file" />
@@ -32,7 +32,7 @@
       <div class="form-group" role="separator"><hr></div>
       <div class="form-group">
         <div  class="col-lg-offset-5">
-          <button type="submit" class="btn btn-default" id="file_upload_btn">上传</button>
+          <button type="submit" class="btn btn-default" id="file_upload_btn">Upload</button>
         </div>
       </div>
     </form>
@@ -50,7 +50,7 @@
 
 </div>
 
-<h2 class="page-header">当前文件</h2>
+<h2 class="page-header">Current Files</h2>
 <div class="row">
   <div class="col-lg-3 col-md-6">
     <div class="panel panel-primary">
@@ -60,13 +60,13 @@
           </div>
           <div class="col-xs-9 text-right" id="upload_prototxt_filelist">
             <div name="upload_prototxt" class="file_num"></div>
-            <div>已上传的prototxt</div>
+            <div>uploaded_prototxt</div>
           </div>
         </div>
       </div>
       <a class="refresh_file_list" id="upload_prototxt">
         <div class="panel-footer">
-          <span class="pull-left">刷新列表</span>
+          <span class="pull-left">Refresh List</span>
           <div class="clearfix"></div>
         </div>
       </a>
@@ -84,13 +84,13 @@
           </div>
           <div class="col-xs-9 text-right">
             <div name="upload_caffemodel" class="file_num"></div>
-            <div>已上传的caffemodel</div>
+            <div>uploaded_caffemodel</div>
           </div>
         </div>
       </div>
       <a class="refresh_file_list" id="upload_caffemodel">
         <div class="panel-footer">
-          <span class="pull-left">刷新列表</span>
+          <span class="pull-left">Refresh List</span>
           <div class="clearfix"></div>
         </div>
       </a>
@@ -107,13 +107,13 @@
           </div>
           <div class="col-xs-9 text-right">
             <div name="generated_prototxt" class="file_num"></div>
-            <div>生成的prototxt</div>
+            <div>generated_prototxt</div>
           </div>
         </div>
       </div>
       <a class="refresh_file_list" id="generated_prototxt">
         <div class="panel-footer">
-          <span class="pull-left">刷新列表</span>
+          <span class="pull-left">Refresh List</span>
           <div class="clearfix"></div>
         </div>
       </a>
@@ -130,13 +130,13 @@
           </div>
           <div class="col-xs-9 text-right">
             <div name="generated_caffemodel" class="file_num"></div>
-            <div>生成的caffemodel</div>
+            <div>generated_caffemodel</div>
           </div>
         </div>
       </div>
       <a class="refresh_file_list" id="generated_caffemodel">
         <div class="panel-footer">
-          <span class="pull-left" id="">刷新列表</span>
+          <span class="pull-left" id="">Refresh List</span>
           <div class="clearfix"></div>
         </div>
       </a>
