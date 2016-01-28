@@ -13,12 +13,13 @@ from werkzeug import secure_filename
 from flask_sockets import Sockets
 
 from dan_web.control import upload as _u
-from dan_web.helper import success_json, fail_json
+from dan_web.helper import success_json, fail_json, chdir
 from dan_web.model import init_db
 
 from dan_web.job_runner import read_log_and_send, read_log_and_send_realtime
 
 here = os.path.dirname(os.path.abspath(__file__))
+
 
 # init app
 app = _f.Flask(__name__)
@@ -28,7 +29,12 @@ for env_name, env_value in app.config.get('WRITE_TO_ENV', {}).iteritems():
     os.environ[env_name] = env_value
 
 try:
-    os.mkdir(app.config['WRITE_TO_ENV']['DAN_WEB_TMP_DIR'])
+    with chdir(here):
+        os.mkdir(app.config['UPLOAD_DIR'])
+        os.mkdir(app.config['USER_CONF_DIR'])
+        os.mkdir(app.config['USER_LOG_DIR'])
+        os.mkdir(app.config['WRITE_TO_ENV']['DAN_WEB_TMP_DIR'])
+        os.mkdir(app.config['WRITE_TO_ENV']['DAN_WEB_RUN_DIR'])
 except Exception:
     pass
 
