@@ -56,7 +56,7 @@ def job_create():
     POST: 新建Job, 成功redirect到该job页面; 失败redirect到自己这页面"""
     if _f.request.method == "GET":
         job_list = [(x.job_name, x.job_id) for x in Job.get_job_list_by_user_id(_l.current_user.user_id)]
-        return _f.render_template("job_create.html", title="任务管理",
+        return _f.render_template("job_create.html", title="Job Management",
                                   now_active_tab="create-new-job",
                                   job_list=job_list)
     elif _f.request.method == "POST":
