@@ -25,6 +25,7 @@ class ViewConfer(object):
         "prune_tool": "Prunning", #"剪枝",
         "quantize_tool": "Quantization", #"量化",
         "nonmodel_tool": "No-model Prunning and Quantization", #"无模型剪枝与量化",
+        "conv_tool": "Decomposition of Convolution Layer", #"卷积层分解"
         "_other": "Unknown Job Type", #"未知的Job类型"
     }
 

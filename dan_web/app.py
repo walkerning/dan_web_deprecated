@@ -6,6 +6,7 @@ Dan web
 from __future__ import unicode_literals, print_function
 import os
 import subprocess
+import logging
 
 import flask as _f
 from flask.ext import login as _l
@@ -20,6 +21,8 @@ from dan_web.job_runner import read_log_and_send, read_log_and_send_realtime
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+# basic config logging
+logging.basicConfig()
 
 # init app
 app = _f.Flask(__name__)

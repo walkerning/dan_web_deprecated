@@ -3,7 +3,9 @@
 定义一下每个工具需要哪些配置,
 以及配置需要的template名字和参数"""
 
+import logging
 from collections import OrderedDict
+
 from dan_web.error import AdapterException, ConfigException
 
 class ToolMeta(type):
@@ -15,6 +17,7 @@ class ToolMeta(type):
         optional = attrs.get('optional', None)
         if not isinstance(required, list) or not isinstance(optional, list):
             # Adapter类定义错误
+            logging.getLogger('dan_web.adapter').error("Adapter class %s is illy defined: Should have 'optional' and 'required' attributes defined!", name)
             return None
         if not name.startswith('Adapter_'):
             name = 'Adapter_' + name

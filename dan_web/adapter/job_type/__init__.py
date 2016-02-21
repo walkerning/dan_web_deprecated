@@ -79,6 +79,73 @@ class Adapter_svd_tool(Tool):
         super_converted['layers'] = [layer_string]
         return super_converted
 
+class Adapter_conv_tool(Tool):
+    __name__ = "conv_tool"
+
+    required = [
+        ("input_proto", {
+            "template":"pre_ajax_selector",
+            "template_args": {
+                'CONFIG_NAME': 'input prototxt'
+            },
+            "convert_flags": ['input_file']
+        }),
+        ("input_caffemodel", {
+            "template": "pre_ajax_selector",
+            "template_args": {
+                'CONFIG_NAME': 'input caffemodel'
+            },
+            "convert_flags": ['input_file']
+        }),
+        ("output_proto", {
+            "template": "plain_text_input",
+            "template_args": {
+                'CONFIG_NAME': 'output prototxt',
+                'PLACEHOLDER': 'will override files with the same name'
+            },
+            "convert_flags": ['output_proto']
+        }),
+        ("output_caffemodel", {
+            "template": "plain_text_input",
+            "template_args": {
+                'CONFIG_NAME': 'output caffemodel',
+                'PLACEHOLDER': 'will override files with the same name'
+            },
+            "convert_flags": ['output_caffemodel']
+        }),
+        ("compression_specification", {
+            "template": "multiple_field_list",
+            "template_args": {
+                'CONFIG_NAME' : 'convolution layer name and compression ratio',
+                'FIELD_LIST' : [
+                    {
+                        'type': 'text',
+                        'name': 'layer_name',
+                        'text': 'layer name'
+                    },
+                    {
+                        'type': 'text',
+                        'name': 'ratio',
+                        'text': 'compression ratio(A positive integer)'
+                    }
+                ]
+            }
+        })
+    ]
+
+    optional = []
+
+    def convert_conf(self, conf_dict, addition_converter=None):
+        super_converted =  super(Adapter_conv_tool,
+                                 self).convert_conf(conf_dict,
+                                                    now_package=__package__,
+                                                    addition_converter=addition_converter)
+        # tool-specific adapting
+        compression_spec_list = json.loads(super_converted.pop('compression_specification'))
+        super_converted['mode'] = {'compression_specification': {spec['layer_name']:spec['ratio'] for spec in compression_spec_list}}
+        return super_converted
+
+
 class Adapter_prune_tool(Tool):
     __name__ = "prune_tool"
     required = [
@@ -140,8 +207,8 @@ class Adapter_prune_tool(Tool):
         conditions = json.loads(super_converted['conditions'])
         conditions = [[True if conf['regex'] else False, conf['pattern'], float(conf['rate'])] for conf in conditions]
         super_converted['conditions'] = conditions
-        return super_converted
 
+        return super_converted
 
 class Adapter_quantize_tool(Tool):
     __name__ = "quantize_tool"
