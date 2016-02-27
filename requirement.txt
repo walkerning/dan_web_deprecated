@@ -24,4 +24,4 @@ gevent-websocket==0.9.5
 
 
 # compression-tool
-git+https://github.com/angel-eye/compression-tool#egg=compression-tool
+git+ssh://git@github.com/angel-eye/compression-tool#egg=compression-tool
