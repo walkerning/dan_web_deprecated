@@ -114,7 +114,9 @@ def job_run():
     #     print(e)
     #     return fail_json(error_string='运行Job失败')
     # fixme: 这个run也在里面raise? 应该不用吧
-
+    user = User.get(_l.current_user.user_id)
+    if user.history_success_job_num >= user.exist_job_limit:
+        return fail_json(error_string="Exceed the upper limit of successfully job running.")
     runner = subprocess.Popen(['python', os.path.join(app_root, 'run_job.py'), str(job.job_id)], close_fds=True) # close_fds argument is supposed to be enough
     try:
         _, status = os.waitpid(runner.pid, 0)

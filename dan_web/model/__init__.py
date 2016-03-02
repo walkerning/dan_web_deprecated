@@ -256,12 +256,16 @@ def init_db(app):
                                 data_file_path)
 
         def set_end_status(self, end_status):
+            user = User.get(self.user_id)
+            user.history_job_num += 1
             if end_status is True:
                 self.job_status = "success"
+                user.history_success_job_num += 1
             else:
                 self.job_status = "failed"
             self.end_time = datetime.datetime.utcnow()
             db.session.add(self)
+            db.session.add(user)
             db.session.commit()
 
         @property
