@@ -30,16 +30,17 @@ def init_db(app):
         history_job_num = db.Column(db.Integer, db.ColumnDefault(0))
         history_success_job_num = db.Column(db.Integer, db.ColumnDefault(0))
 
-        def __init__(self, user_name, password):
+        def __init__(self, user_name, password, exist_job_limit):
             self.user_name = user_name
             self.set_password(password)
+            self.exist_job_limit = exist_job_limit
 
         @classmethod
-        def create_user(cls, user_name, password):
+        def create_user(cls, user_name, password, exist_job_limit=5):
             """
             用于创建新用户, 现在不开放注册功能
             由管理员手动创建"""
-            new_user = User(user_name, password)
+            new_user = User(user_name, password, exist_job_limit)
             try:
                 db.session.add(new_user)
                 db.session.commit()

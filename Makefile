@@ -1,6 +1,9 @@
 run:
 	gunicorn -k flask_sockets.worker --access-logfile _access_log.log --log-file _gunicorn_log.log --log-level debug dan_web.app:app
 
+runwithnginx:
+	gunicorn -k flask_sockets.worker --access-logfile _access_log.log --log-file _gunicorn_log.log --log-level debug dan_web.app:app --bind localhost:8002 -D
+
 runmyvps:
 	gunicorn -k flask_sockets.worker --access-logfile _access_log.log --log-file _gunicorn_log.log --log-level debug dan_web.app:app --bind 0.0.0.0:8002 -D
 
