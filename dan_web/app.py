@@ -31,15 +31,14 @@ app.config.from_pyfile(os.path.join(here, 'app_conf.py'))
 for env_name, env_value in app.config.get('WRITE_TO_ENV', {}).iteritems():
     os.environ[env_name] = env_value
 
-try:
-    with chdir(here):
-        os.mkdir(app.config['UPLOAD_DIR'])
-        os.mkdir(app.config['USER_CONF_DIR'])
-        os.mkdir(app.config['USER_LOG_DIR'])
-        os.mkdir(app.config['WRITE_TO_ENV']['DAN_WEB_TMP_DIR'])
-        os.mkdir(app.config['WRITE_TO_ENV']['DAN_WEB_RUN_DIR'])
-except Exception:
-    pass
+with chdir(here):
+    for dirpath in [app.config['UPLOAD_DIR'], app.config['USER_CONF_DIR'], 
+                    app.config['USER_LOG_DIR'], app.config['WRITE_TO_ENV']['DAN_WEB_TMP_DIR'],
+                    app.config['WRITE_TO_ENV']['DAN_WEB_RUN_DIR']]:
+        try:
+            os.mkdir(dirpath)
+        except Exception as e:
+            pass
 
 app.debug = True #just for debug
 
