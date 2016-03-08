@@ -280,6 +280,11 @@ def init_db(app):
                                 self.log_file)
 
         @property
+        def abs_traceback_file(self):
+            return os.path.join(User.get(self.user_id).get_user_log_dir(),
+                                self.log_file + ".traceback")
+
+        @property
         def abs_conf_file(self):
             return os.path.join(User.get(self.user_id).get_user_conf_dir(),
                                 self.job_conf)
@@ -308,6 +313,7 @@ def init_db(app):
 
         @classmethod
         def delete_by_job_id(cls, job_id):
+            # Fixme: 删除log, traceback等文件
             job = cls.get(job_id)
             job.active = False
             db.session.add(job)

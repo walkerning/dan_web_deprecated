@@ -125,14 +125,14 @@ class JobRunner(object):
                                                                   })
         self.conf['hide_file_path'] = True
 
-        # dump temporary config file for danp
+        # dump temporary config file for dan
         self._tmp_conf_file = self.dump_dan_config_file()
+
+        self.runner = ['dan', '-f',  self._tmp_conf_file, '-t', job.abs_traceback_file]
 
         pycaffe_path =  os.environ.get('DAN_WEB_PYCAFFE_PATH', None)
         if pycaffe_path is not None:
-            self.runner = ['dan', '-c', pycaffe_path, '-f', self._tmp_conf_file]
-        else:
-            self.runner = ['dan', '-f', self._tmp_conf_file]
+            self.runner.extend(['-c', pycaffe_path])
 
         self.log_file = job.abs_log_file
         self.pid_file = job.pid_file
