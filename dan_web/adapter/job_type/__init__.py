@@ -335,5 +335,77 @@ class Adapter_nonmodel_tool(Tool):
                 'foolmode': True,
                 'compression_rate': int(super_converted.pop('compression_rate', 4))
             }
-            
+
+        return super_converted
+
+class Adapter_pq_tool(Tool):
+    __name__ = "pq_tool"
+    required = [
+        ("input_proto", {
+            "template":"pre_ajax_selector",
+            "template_args": {
+                # 所需的配置
+                'CONFIG_NAME': 'input prototxt'
+            },
+            "convert_flags": ['input_file']
+        }),
+        ("input_caffemodel", {
+            "template": "pre_ajax_selector",
+            "template_args": {
+                'CONFIG_NAME': 'input caffemodel'
+            },
+            "convert_flags": ['input_file']
+        }),
+        ("output_proto", {
+            "template": "plain_text_input",
+            "template_args": {
+                'CONFIG_NAME': 'output prototxt',
+                'PLACEHOLDER': 'will override files with the same name'
+            },
+            "convert_flags": ['output_proto']
+        }),
+        ("output_caffemodel", {
+            "template": "plain_text_input",
+            "template_args": {
+                'CONFIG_NAME': 'output caffemodel',
+                'PLACEHOLDER': 'will override files with the same name'
+            },
+            "convert_flags": ['output_caffemodel']
+        }),
+        ("mode", {
+            "template": "post_ajax_selector",
+            "template_args": {
+                'CONFIG_NAME': 'configuration mode',
+                'AVAILABLE_OPTIONS': [('foolmode', 'simple'),
+                                      ('advancemode', 'advance: specify details yourself')],
+            },
+            "convert_flags": ['recursive']
+        })
+    ]
+
+    optional = []
+
+    def convert_conf(self, conf_dict, addition_converter=None):
+        super_converted =  super(Adapter_pq_tool,
+                                 self).convert_conf(conf_dict,
+                                                    now_package=__package__,
+                                                    addition_converter=addition_converter)
+        # tool-specific adapting
+        if super_converted.get('mode', None) == 'advancemode':
+            prune_conditions = json.loads(super_converted.pop('prune_conditions'))
+            prune_conditions = [[True if conf['regex'] else False, conf['pattern'], float(conf['rate'])] for conf in prune_conditions]
+            quantize_conditions = json.loads(super_converted.pop('quantize_conditions'))
+            quantize_conditions = [[True if conf['regex'] else False, conf['pattern'], int(conf['bits'])] for conf in quantize_conditions]
+
+            super_converted['mode'] = {
+                'foolmode': False,
+                'prune_conditions': prune_conditions,
+                'quantize_conditions': quantize_conditions
+            }
+        else:
+            super_converted['mode'] = {
+                'foolmode': True,
+                'compression_rate': int(super_converted.pop('compression_rate', 4))
+            }
+
         return super_converted
